@@ -298,3 +298,26 @@ work with the 5.4 kernel.  Get the download image from:
    % tar xzf 2.6.0.tar.gz
    % cd 
       ```
+1. For real
+
+   https://electronstudio.github.io/raylib-python-cffi/RPI.html
+
+   ```
+   sudo apt-get install bluetooth libbluetooth-dev
+   sudo apt-get install python-bluez
+   sudo python3 -m pip install pybluez
+
+   git clone https://github.com/raysan5/raylib.git --branch 5.0 --single-branch
+   cd raylib
+   mkdir build
+   rm rf build/*
+   cd build
+   cmake -DPLATFORM="DRM" -DBUILD_EXAMPLES=OFF -DCUSTOMIZE_BUILD=ON -DSUPPORT_FILEFORMAT_JPG=ON -DSUPPORT_FILEFORMAT_FLAC=ON -DWITH_PIC=ON -DCMAKE_BUILD_TYPE=Release ..
+   make
+   sudo make install
+
+   sudo apt update
+   sudo apt install python3-pip
+   pip3 install setuptools
+   LDFLAGS="-lgbm -ldrm -lEGL" pip3 install --no-cache-dir --no-binary raylib --upgrade --force-reinstall raylib==5.0.0.0
+   ```

@@ -1,0 +1,2 @@
+FROM arm32v7/node:21-alpine
+COPY from=hw-coordinator:latest /usr/app /usr/app/

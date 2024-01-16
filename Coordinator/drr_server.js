@@ -55,7 +55,7 @@ const hostname = os.hostname()
 const defaultCircuit = 'DRR'
 
 // File system path for the root of the release directory. Customize this as you see fit
-const releases_root = '/home/htdocs/DRR'
+const releases_root = '/usr/app/DRR'
 
 var server = express() // Server object provided by the Express framework: https://expressjs.com/
 var timeout = require('connect-timeout')
@@ -172,6 +172,10 @@ function sendErrorResponse(res, code, text) {
     res.end()
 }
 
+server.get('/status', async function(req, res) {
+    res.json(circuits)
+})
+
 /*
  * POST /register
  *
@@ -215,7 +219,6 @@ function sendErrorResponse(res, code, text) {
  *      ]
  *    }
  */
-
 server.post('/register', async function(req, res) {
     const ip = req.connection.remoteAddress
     req.setTimeout(86400*100)
