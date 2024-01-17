@@ -310,7 +310,7 @@ def main():
     Configure starting_gate and run races
     """
 
-    config = Config("/home/pi/config/starting_gate.json")
+    config = Config("/home/aweiland/StartingGate/config/starting_gate.json")
     display = Display(config)
     device = DeviceIO()
     coordinator = Coordinator(config)

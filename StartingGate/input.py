@@ -18,8 +18,8 @@ import time
 
 from deviceio import DeviceIO, JOYU, JOYD, JOYL, JOYR, JOYP
 
-from raylib.pyray import PyRay
-from raylib.colors import BLACK, WHITE, GRAY, LIGHTGRAY, RAYWHITE
+import pyray as pr
+from pyray import BLACK, WHITE, GRAY, LIGHTGRAY, RAYWHITE
 
 #
 # Input via selection from a 6x6 grid.  Grid positions are numbered:
@@ -136,8 +136,8 @@ class Input:
         while not self.input_complete:
             display_string = ""
 
-            self.pyray.begin_drawing()
-            self.pyray.clear_background(RAYWHITE)
+            pr.begin_drawing()
+            pr.clear_background(RAYWHITE)
 
             #blink = int(time.monotonic_ns()/400000000) % 2
             blink = int(time.monotonic()*4) % 2
@@ -163,16 +163,16 @@ class Input:
             else:
                 print("INVALID MODE!")
 
-            self.pyray.end_drawing()
+            pr.end_drawing()
 
         self.device.pop_key_handlers()
         return self.string
 
 # PRIVATE
 
-    def __init__(self, pyray, font):
+    def __init__(self, font):
 
-        self.pyray = pyray
+        # pr = pyray
         self.font = font
 
         self.device = DeviceIO()
@@ -234,12 +234,12 @@ class Input:
         If gray=True, set the box fill color to gray and the text color to white
         """
         if gray:
-            self.pyray.draw_rectangle_rec([x, y, width, height], LIGHTGRAY)
+            pr.draw_rectangle_rec([x, y, width, height], LIGHTGRAY)
         else:
-            self.pyray.draw_rectangle_rec([x, y, width, height], WHITE)
+            pr.draw_rectangle_rec([x, y, width, height], WHITE)
 
-        self.pyray.draw_rectangle_lines(x, y, width, height, BLACK)
-        self.pyray.draw_text_rec(self.font, text, [x+10, y+5, width-10, height-5],
+        pr.draw_rectangle_lines(x, y, width, height, BLACK)
+        pr.draw_text_rec(self.font, text, [x+10, y+5, width-10, height-5],
                                  size, 5.0, True, BLACK)
 
     def __character_box(self, text, x, y, width, height, size, inverted=False): # pylint: disable=invalid-name
@@ -252,14 +252,14 @@ class Input:
         match that of __character_position()
         """
         if inverted:
-            self.pyray.draw_rectangle_rec([x, y, width, height], GRAY)
-            self.pyray.draw_text_rec(self.font, text, [x+10, y+10, width, height],
+            pr.draw_rectangle_rec([x, y, width, height], GRAY)
+            pr.draw_text_rec(self.font, text, [x+10, y+10, width, height],
                                      size, 10.0, True, WHITE)
         else:
-            self.pyray.draw_rectangle_rec([x, y, width, height], WHITE)
-            self.pyray.draw_text_rec(self.font, text, [x+10, y+10, width, height],
+            pr.draw_rectangle_rec([x, y, width, height], WHITE)
+            pr.draw_text_rec(self.font, text, [x+10, y+10, width, height],
                                      size, 10.0, True, BLACK)
-        self.pyray.draw_rectangle_lines(x, y, width, height, BLACK)
+        pr.draw_rectangle_lines(x, y, width, height, BLACK)
 
     def __character_position(self, byte_array, grid_pos, width=40):
         """
@@ -275,26 +275,26 @@ class Input:
         height = 40
 
         if grid_pos == self.cursor_pos:
-            self.pyray.draw_rectangle_rec([x, y, width, height], GRAY)
-            self.pyray.draw_text_rec(self.font, byte_array, [x+10, y+10, width, height],
+            pr.draw_rectangle_rec([x, y, width, height], GRAY)
+            pr.draw_text_rec(self.font, byte_array, [x+10, y+10, width, height],
                                      28, 10.0, True, WHITE)
         else:
-            self.pyray.draw_rectangle_rec([x, y, width, height], WHITE)
-            self.pyray.draw_text_rec(self.font, byte_array, [x+10, y+10, width, height],
+            pr.draw_rectangle_rec([x, y, width, height], WHITE)
+            pr.draw_text_rec(self.font, byte_array, [x+10, y+10, width, height],
                                      28, 10.0, True, BLACK)
-        self.pyray.draw_rectangle_lines(x, y, width, height, BLACK)
+        pr.draw_rectangle_lines(x, y, width, height, BLACK)
 
 def main():
     """
     When run as main program, create Menu object and run main function
     """
-    pyray = PyRay()
-    pyray.init_window(240, 240, "Menu Test")
-    pyray.set_target_fps(30)
-    pyray.hide_cursor()
+    # pyray = PyRay()
+    pr.init_window(240, 240, "Menu Test")
+    pr.set_target_fps(30)
+    pr.hide_cursor()
 
-    font = pyray.load_font("fonts/Roboto-Black.ttf")
-    inp = Input(pyray, font)
+    font = pr.load_font("fonts/Roboto-Black.ttf")
+    inp = Input(font)
 
     while True:
         string = inp.get_string()
