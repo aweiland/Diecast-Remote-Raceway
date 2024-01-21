@@ -342,9 +342,12 @@ class Display(threading.Thread):
                 self.remote_y[car] = self.y_starting_offset
 
     def __text_box_dense(self, text, x, y, width, height, size):
-        pr.draw_rectangle_rec([x, y, width, height], WHITE)
-        pr.draw_text_rec(self.font, text, [x+2, y+2, width-2, height-2], size, 2,
-                                 True, BLACK)
+        # pr.draw_rectangle_rec([x, y, width, height], WHITE)
+        # pr.draw_text_rec(self.font, text, [x+2, y+2, width-2, height-2], size, 2,
+                                #  True, BLACK)
+        pr.draw_rectangle(x, y, width, height, WHITE)
+        # pr.draw_text(self.font, text, x+2, y+2, size, BLACK)
+        pr.draw_text_ex(self.font, text, pr.Vector2(x+2, y+2), size, 2, BLACK)
 
     def __text_box(self, text, x, y, width, height, size, inverted=False):
         """
@@ -352,13 +355,18 @@ class Display(threading.Thread):
         """
         pr.draw_rectangle_lines(x, y, width, height, BLACK)
         if inverted:
-            pr.draw_rectangle_rec([x, y, width, height], GRAY)
-            pr.draw_text_rec(self.font, text,
-                                     [x+10, y+2, width-10, height-2], size, 3.5, True, WHITE)
+            pr.draw_rectangle(x, y, width, height, GRAY)
+            pr.draw_text(self.font, text, x+10, y+2, size, WHITE)
+            # pr.draw_rectangle_rec([x, y, width, height], GRAY)
+            # pr.draw_text_rec(self.font, text,
+                                    #  [x+10, y+2, width-10, height-2], size, 3.5, True, WHITE)
         else:
-            pr.draw_rectangle_rec([x, y, width, height], WHITE)
-            pr.draw_text_rec(self.font, text,
-                                     [x+10, y+2, width-10, height-2], size, 3.5, True, BLACK)
+            pr.draw_rectangle(x, y, width, height, WHITE)
+            pr.draw_text_ex(self.font, text, pr.Vector2(x+10, y+2), size, 3.5, BLACK)
+            # pr.draw_text(self.font, text, x+10, y+2, size, BLACK)
+            # pr.draw_rectangle_rec([x, y, width, height], WHITE)
+            # pr.draw_text(self.font, text,
+            #                          [x+10, y+2, width-10, height-2], size, 3.5, True, BLACK)
 
     @staticmethod
     def __font_size(text):

@@ -90,7 +90,7 @@ def run_starting_gate():
     """
     Execute the Starting Gate program and wait for it to complete
     """
-    result = subprocess.run(["/home/pi/starting_gate.py"], check=False)
+    result = subprocess.run(["/home/aweiland/StartingGate/starting_gate.py"], check=False)
     print ("process returned = ", result.returncode)
 
 while True:

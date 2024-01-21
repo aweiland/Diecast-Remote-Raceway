@@ -238,8 +238,18 @@ work with the 5.4 kernel.  Get the download image from:
       dtparam=spi=on
       ```
 
-    TODO: Verify this is needed - Setup framebuffer device
-
+      Setup framebuffer device
+      https://www.instructables.com/13-Inches-RetroPie-Zero/
+      ```
+      [all]
+      disable_overscan=1
+      hdmi_force_hotplug=1
+      hdmi_group=2
+      hdmi_mode=87
+      hdmi_cvt=240 240 60 1 0 0 0
+      dtparam=spi=on
+      ```
+      OLD WAY
       ```
       [ALL]
       hdmi_force_hotplug = 1
@@ -320,4 +330,20 @@ work with the 5.4 kernel.  Get the download image from:
    sudo apt install python3-pip
    pip3 install setuptools
    LDFLAGS="-lgbm -ldrm -lEGL" pip3 install --no-cache-dir --no-binary raylib --upgrade --force-reinstall raylib==5.0.0.0
+
+   sudo apt-get install cmake -y
+   sudo apt-get install p7zip-full -y
+   wget https://files.waveshare.com/upload/f/f9/Waveshare_fbcp.7z
+   7z x Waveshare_fbcp.7z -o./waveshare_fbcp
+   cd waveshare_fbcp
+   mkdir build
+   cd build
+   cmake -DSPI_BUS_CLOCK_DIVISOR=20 -DWAVESHARE_1INCH3_LCD_HAT=ON -DBACKLIGHT_CONTROL=ON -DSTATISTICS=0 ..
+   make -j
+   sudo cp ~/waveshare_fbcp/build/fbcp /usr/local/bin/fbcp
+   sudo vi /etc/rc.local
+
+   And then add fbcp& before exit 0.
+
+
    ```
