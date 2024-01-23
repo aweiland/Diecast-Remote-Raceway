@@ -51,6 +51,7 @@ class RaceState(enum.Enum):
     RACE_STARTED = 8             # Race is being run
     RACE_FINISHED = 9            # Race successfully completed, show results
     RACE_TIMEOUT = 10            # Race did not complete w/in configured time, show partial results
+    STARTUP = 11                 # First startup.  Avoids some race condition between the GL context and first menu draw
 
 class Display(threading.Thread):
     """
@@ -266,7 +267,8 @@ class Display(threading.Thread):
             RaceState.COUNTDOWN: self.__countdown,
             RaceState.RACE_STARTED: self.__race_started,
             RaceState.RACE_FINISHED: self.__race_finished,
-            RaceState.RACE_TIMEOUT: self.__race_timeout
+            RaceState.RACE_TIMEOUT: self.__race_timeout,
+            RaceState.STARTUP: self.__menu_done,
         }
 
         # Declare initial Y offset for car images at the start of a race
@@ -302,7 +304,7 @@ class Display(threading.Thread):
         self.registration_event = threading.Event()
         self.registration_event.clear()
 
-        self.state = RaceState.WAIT_MENU
+        self.state = RaceState.STARTUP
         self.running = True
         self.start()
 
@@ -312,6 +314,7 @@ class Display(threading.Thread):
 
         Note, all pyray interactions must be done in this thread as it creates the GL context!
         """
+        print("Starting window")
         pr.init_window(240, 240, "Diecast Remote Raceway")
         pr.set_target_fps(30)
         pr.hide_cursor()
@@ -324,7 +327,7 @@ class Display(threading.Thread):
             pr.begin_drawing()
             pr.clear_background(RAYWHITE)
 
-            if self.state != RaceState.WAIT_MENU:
+            if self.state != RaceState.WAIT_MENU and self.state != RaceState.STARTUP:
                 # A common background is displayed for all race states after leaving the
                 # main menu.
                 pr.draw_texture(self.background_texture, 0, 0, WHITE)
@@ -333,6 +336,7 @@ class Display(threading.Thread):
             # Dispatch to appropriate drawing routine based on current race state
             self.dispatch[self.state]()
             pr.end_drawing()
+
 
     def __reset_car_positions(self):
         for car in range(self.config.num_lanes):
@@ -407,11 +411,22 @@ class Display(threading.Thread):
             pr.draw_texture(self.checkerboard_texture, 138, 196, WHITE)
             pr.draw_texture(self.checkerboard_texture, 183, 196, WHITE)
         else:
-            pr.draw_line_ex([64, 10], [64, 230], 64.0, ORANGE)
-            pr.draw_line_ex([164, 10], [164, 230], 64.0, ORANGE)
+            pr.draw_line_ex([35, 40], [35, 230], 34.0, ORANGE)
+            pr.draw_line_ex([80, 40], [80, 230], 34.0, ORANGE)
 
-            pr.draw_texture(self.checkerboard_texture, 32, 166, WHITE)
-            pr.draw_texture(self.checkerboard_texture, 132, 166, WHITE)
+            pr.draw_texture(self.checkerboard_texture, 18, 196, WHITE)
+            pr.draw_texture(self.checkerboard_texture, 63, 196, WHITE)
+
+            pr.draw_line_ex([155, 40], [155, 230], 34.0, ORANGE)
+            pr.draw_line_ex([200, 40], [200, 230], 34.0, ORANGE)
+
+            pr.draw_texture(self.checkerboard_texture, 138, 196, WHITE)
+            pr.draw_texture(self.checkerboard_texture, 183, 196, WHITE)
+            # pr.draw_line_ex([64, 10], [64, 230], 64.0, ORANGE)
+            # pr.draw_line_ex([164, 10], [164, 230], 64.0, ORANGE)
+
+            # pr.draw_texture(self.checkerboard_texture, 32, 166, WHITE)
+            # pr.draw_texture(self.checkerboard_texture, 132, 166, WHITE)
 
     def __draw_cars(self, texture1, texture2, texture3, texture4):
         #pylint: disable=bad-whitespace
@@ -421,8 +436,12 @@ class Display(threading.Thread):
             pr.draw_texture(texture3, 142, self.remote_y[CAR1], WHITE)
             pr.draw_texture(texture4, 188, self.remote_y[CAR2], WHITE)
         else:
-            pr.draw_texture(texture1,  40, self.local_y[CAR1],  WHITE)
-            pr.draw_texture(texture2, 140, self.local_y[CAR2],  WHITE)
+            # pr.draw_texture(texture1,  40, self.local_y[CAR1],  WHITE)
+            # pr.draw_texture(texture2, 140, self.local_y[CAR2],  WHITE)
+            pr.draw_texture(texture1,  22, self.local_y[CAR1], WHITE)
+            pr.draw_texture(texture2,  68, self.local_y[CAR2], WHITE)
+            pr.draw_texture(texture3, 142, self.local_y[CAR1], WHITE)
+            pr.draw_texture(texture4, 188, self.local_y[CAR2], WHITE)
 
 
     def __draw_result(self, track_count, track_number, lane_number, lane_time, place):
@@ -510,7 +529,7 @@ class Display(threading.Thread):
 
     def __countdown(self):
         self.__draw_cars(self.local_textures[CAR1], self.local_textures[CAR2],
-                         self.remote_textures[CAR1], self.remote_textures[CAR2])
+                         self.local_textures[CAR1], self.local_textures[CAR2])
         now = time.monotonic()
         if now - self.countdown_start > 3.0:
             self.countdown_event.set()
@@ -527,8 +546,8 @@ class Display(threading.Thread):
 
         self.__draw_cars(self.local_textures[0],
                          self.local_textures[1],
-                         self.remote_textures[0],
-                         self.remote_textures[1])
+                         self.local_textures[0],
+                         self.local_textures[1])
         self.__text_box(delta_bytes, 26, 95, 180, 55, 50)
         for car in range(self.config.num_lanes):
             if random.random() < self.progress_threshold and self.local_y[car] < Display._MAX_Y:
@@ -566,6 +585,7 @@ def run_sample_race():
     main_config = Config("config/starting_gate.json")
 
     display = Display(main_config)
+    time.sleep(1.0)
     print("main: calling wait_menu")
     display.wait_menu()
     time.sleep(1.0)
@@ -609,10 +629,15 @@ def run_sample_race():
         display.race_finished(test_results)
     else:
         test_results = [{"trackName":main_config.track_name, "laneNumber":2, "laneTime":1.234},
-                        {"trackName":main_config.track_name, "laneNumber":1, "laneTime":2.087}]
+                        {"trackName":main_config.track_name, "laneNumber":1, "laneTime":2.087},
+                        {"trackName":main_config.track_name, "laneNumber":3, "laneTime":4.234},
+                        {"trackName":main_config.track_name, "laneNumber":4, "laneTime":5.234},]
         display.race_finished(test_results)
 
-    display.join()
+    # display.join()
+    time.sleep(10)
+    display.exit()
+    print("done")
 
 if __name__ == '__main__':
     run_sample_race()

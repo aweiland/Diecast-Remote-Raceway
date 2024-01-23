@@ -28,6 +28,7 @@ import operator
 import select
 import time
 import traceback
+import threading
 
 import bluetooth
 import deviceio
@@ -309,9 +310,9 @@ def main():
     """
     Configure starting_gate and run races
     """
-
     config = Config("/home/aweiland/StartingGate/config/starting_gate.json")
     display = Display(config)
+    
     device = DeviceIO()
     coordinator = Coordinator(config)
     socket = None
@@ -319,6 +320,8 @@ def main():
     global finish_line_connected #pylint: disable=global-statement
 
     reset_starting_gate(config)
+
+    time.sleep(5)
 
     # Main loop to iterate over successive race configurations
     while True:
@@ -329,7 +332,6 @@ def main():
 
         # De-register with race coordinator.
         config.allow_multi_track = coordinator.deregister()
-
         # Display the main menu and wait for race selection
         display.wait_menu()
 
