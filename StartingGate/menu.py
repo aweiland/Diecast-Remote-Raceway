@@ -655,7 +655,7 @@ class Menu:
             pr.begin_drawing()
             pr.clear_background(RAYWHITE)
             pr.draw_texture(self.background_texture, 0, 0, WHITE)
-            self.__text_box(TEXT[MenuState.RACE_TIMEOUT], 0, 0, 240, 40, 28)
+            self.__text_box(TEXT[MenuState.NUM_LANES], 0, 0, 240, 40, 28)
             #pylint: disable=bad-whitespace
             self.__text_box("1",  16, 80, 40, 40, 30, self.num_lanes_pos == 1)
             self.__text_box("2",  72, 80, 40, 40, 30, self.num_lanes_pos == 2)
@@ -949,12 +949,15 @@ class Menu:
         If gray=True, set the box fill color to gray and the text color to white
         """
         if gray:
-            pr.draw_rectangle_rec([x, y, width, height], LIGHTGRAY)
+            # pr.draw_rectangle_rec([x, y, width, height], LIGHTGRAY)
+            pr.draw_rectangle(x, y, width, height, LIGHTGRAY)
         else:
-            pr.draw_rectangle_rec([x, y, width, height], WHITE)
+            # pr.draw_rectangle_rec([x, y, width, height], WHITE)
+            pr.draw_rectangle(x, y, width, height, WHITE)
         pr.draw_rectangle_lines(x, y, width, height, BLACK)
-        pr.draw_text_rec(self.font, text, [x+10, y+5, width-10, height-5],
-                                 size, 5.0, True, BLACK)
+        # pr.draw_text_rec(self.font, text, [x+10, y+5, width-10, height-5],
+                                #  size, 5.0, True, BLACK)
+        pr.draw_text_ex(self.font, text, pr.Vector2(x+10, y+2), size, 5, BLACK)
 
     def __menu_line(self, state, x, y, width, height, size):
         """

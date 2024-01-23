@@ -321,7 +321,7 @@ def main():
 
     reset_starting_gate(config)
 
-    time.sleep(5)
+    # time.sleep(5)
 
     # Main loop to iterate over successive race configurations
     while True:

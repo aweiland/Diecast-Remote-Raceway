@@ -234,13 +234,17 @@ class Input:
         If gray=True, set the box fill color to gray and the text color to white
         """
         if gray:
-            pr.draw_rectangle_rec([x, y, width, height], LIGHTGRAY)
+            # pr.draw_rectangle_rec([x, y, width, height], LIGHTGRAY)
+            pr.draw_rectangle(x, y, width, height, LIGHTGRAY)
         else:
-            pr.draw_rectangle_rec([x, y, width, height], WHITE)
+            # pr.draw_rectangle_rec([x, y, width, height], WHITE)
+            pr.draw_rectangle(x, y, width, height, WHITE)
 
         pr.draw_rectangle_lines(x, y, width, height, BLACK)
-        pr.draw_text_rec(self.font, text, [x+10, y+5, width-10, height-5],
-                                 size, 5.0, True, BLACK)
+        # pr.draw_text_rec(self.font, text, [x+10, y+5, width-10, height-5],
+                                #  size, 5.0, True, BLACK)
+        pr.draw_text_ex(self.font, text, pr.Vector2(x+10, y+2), size, 5.0, BLACK)
+        
 
     def __character_box(self, text, x, y, width, height, size, inverted=False): # pylint: disable=invalid-name
         """
@@ -252,14 +256,18 @@ class Input:
         match that of __character_position()
         """
         if inverted:
-            pr.draw_rectangle_rec([x, y, width, height], GRAY)
-            pr.draw_text_rec(self.font, text, [x+10, y+10, width, height],
-                                     size, 10.0, True, WHITE)
+            # pr.draw_rectangle_rec([x, y, width, height], GRAY)
+            pr.draw_rectangle(x, y, width, height, GRAY)
+            # pr.draw_text_rec(self.font, text, [x+10, y+10, width, height],
+                                    #  size, 10.0, True, WHITE)
+            pr.draw_text_ex(self.font, text, pr.Vector2(x+10, y+2), size, 10.0, WHITE)
         else:
-            pr.draw_rectangle_rec([x, y, width, height], WHITE)
-            pr.draw_text_rec(self.font, text, [x+10, y+10, width, height],
-                                     size, 10.0, True, BLACK)
-        pr.draw_rectangle_lines(x, y, width, height, BLACK)
+            # pr.draw_rectangle_rec([x, y, width, height], WHITE)
+            pr.draw_rectangle(x, y, width, height, WHITE)
+            # pr.draw_text_rec(self.font, text, [x+10, y+10, width, height],
+                                    #  size, 10.0, True, BLACK)
+            pr.draw_text_ex(self.font, text, pr.Vector2(x+10, y+2), size, 10.0, BLACK)
+            pr.draw_rectangle_lines(x, y, width, height, BLACK)
 
     def __character_position(self, byte_array, grid_pos, width=40):
         """
@@ -275,13 +283,17 @@ class Input:
         height = 40
 
         if grid_pos == self.cursor_pos:
-            pr.draw_rectangle_rec([x, y, width, height], GRAY)
-            pr.draw_text_rec(self.font, byte_array, [x+10, y+10, width, height],
-                                     28, 10.0, True, WHITE)
+            # pr.draw_rectangle_rec([x, y, width, height], GRAY)
+            pr.draw_rectangle(x, y, width, height, GRAY)
+            # pr.draw_text_rec(self.font, byte_array, [x+10, y+10, width, height],
+                                    #  28, 10.0, True, WHITE)
+            pr.draw_text_ex(self.font, byte_array, pr.Vector2(x+10, y+2), 28, 10.0, WHITE)
         else:
-            pr.draw_rectangle_rec([x, y, width, height], WHITE)
-            pr.draw_text_rec(self.font, byte_array, [x+10, y+10, width, height],
-                                     28, 10.0, True, BLACK)
+            # pr.draw_rectangle_rec([x, y, width, height], WHITE)
+            pr.draw_rectangle(x, y, width, height, WHITE)
+            # pr.draw_text_rec(self.font, byte_array, [x+10, y+10, width, height],
+                                    #  28, 10.0, True, BLACK)
+            pr.draw_text_ex(self.font, byte_array, pr.Vector2(x+10, y+2), 28, 10.0, BLACK)
         pr.draw_rectangle_lines(x, y, width, height, BLACK)
 
 def main():

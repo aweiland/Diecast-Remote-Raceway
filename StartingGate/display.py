@@ -183,7 +183,10 @@ class Display(threading.Thread):
         else:
             banner_size = 96
             car_icon_size = 48
-            checkerboard_size = 64
+            if self.config.num_lanes > 2:
+                checkerboard_size = 34
+            else:
+                checkerboard_size = 64
             y_starting_offset = 10
 
         # Load the background image
