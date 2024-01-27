@@ -327,6 +327,7 @@ class Display(threading.Thread):
 
         while self.running and not pr.window_should_close():
             # Draw common background used for all displays
+            print(f"drawing display {self.state}")
             pr.begin_drawing()
             pr.clear_background(RAYWHITE)
 
@@ -339,7 +340,7 @@ class Display(threading.Thread):
             # Dispatch to appropriate drawing routine based on current race state
             self.dispatch[self.state]()
             pr.end_drawing()
-
+        print("ENDED DISPLAY!!!!!")
 
     def __reset_car_positions(self):
         for car in range(self.config.num_lanes):
@@ -486,6 +487,7 @@ class Display(threading.Thread):
     def __wait_menu(self):
         self.menu.process_menus()
         self.state = RaceState.MENU_DONE
+        print("Menu displayed, waiting...")
         self.__load_textures()
         self.menu_event.set()
 

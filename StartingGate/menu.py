@@ -421,7 +421,6 @@ class Menu:
         self.car_icon_selected = None
 
         background_image = pr.load_image("images/background.png")
-
         self.background_texture = pr.load_texture_from_image(background_image)
         pr.unload_image(background_image)
 

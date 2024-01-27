@@ -333,6 +333,7 @@ def main():
         # De-register with race coordinator.
         config.allow_multi_track = coordinator.deregister()
         # Display the main menu and wait for race selection
+        print("showing main menu")
         display.wait_menu()
 
         device.push_key_handlers(key_pressed, key_pressed, key_pressed,
