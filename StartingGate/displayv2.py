@@ -3,66 +3,21 @@ import random
 import threading
 import time
 
+from abc import ABC
+
 import pyray as pr
 from pyray import WHITE, RAYWHITE, GRAY, BLACK, ORANGE, LIGHTGRAY
 
 
-class View:
-    def __init__(self, config):
-        self.config = config
-        self.font = pr.load_font("fonts/Roboto-Black.ttf")
 
-    def draw(self):
-        assert 0, "draw not implemented"
-
-    def should_wait(self):
-        '''Prevents multiple redraws when not necessary'''
-        assert 0, "should_wait not implemented"
-
-
-class MainMenu(View):
-
-    def __init__(self, config):
-        super().__init__(config)
-
-        print("Loading main menu textures")
-
-        background_image = pr.load_image("images/background.png")
-        self.background_texture = pr.load_texture_from_image(background_image)
-        pr.unload_image(background_image)
-
-        single_track_image = pr.load_image("images/Single-Track.png")
-        self.single_track_texture = pr.load_texture_from_image(single_track_image)
-        pr.unload_image(single_track_image)
-
-        multi_track_image = pr.load_image("images/Multi-Track.png")
-        self.multi_track_texture = pr.load_texture_from_image(multi_track_image)
-        pr.unload_image(multi_track_image)
-
-        configure_image = pr.load_image("images/Configure.png")
-        self.configure_texture = pr.load_texture_from_image(configure_image)
-        pr.unload_image(configure_image)
-
-    def draw(self):
-        pr.draw_texture(self.background_texture, 0, 0, WHITE)
-
-        pr.draw_texture(self.single_track_texture, 10,  45, WHITE)
-
-        if self.config.allow_multi_track:
-            pr.draw_texture(self.multi_track_texture,  10, 100, WHITE)
-        else:
-            pr.draw_texture(self.multi_track_texture,  10, 100, LIGHTGRAY)
-
-        pr.draw_texture(self.configure_texture, 10, 155, WHITE)
-
-    def should_wait(self):
-        return True
-
-
+def init_display():
+    print("Starting window")
+    pr.init_window(240, 240, "Diecast Remote Raceway")
+    pr.set_target_fps(30)
+    pr.hide_cursor()
 
 
 class Display(threading.Thread):
-
     __instance = None
 
     def __new__(cls, val):
@@ -102,7 +57,7 @@ class Display(threading.Thread):
         pr.set_target_fps(30)
         pr.hide_cursor()
 
-        self.main_menu = MainMenu(self.config)
+        self.main_menu = MainMenuView()
         self.current_view = self.main_menu
 
         self.font = pr.load_font("fonts/Roboto-Black.ttf")
@@ -114,18 +69,16 @@ class Display(threading.Thread):
             pr.begin_drawing()
             pr.clear_background(RAYWHITE)
 
-            self.current_view.draw()
+            self.current_view.draw(self.config)
 
             pr.end_drawing()
 
             # if self.current_view.should_wait():
-                # print("View said to wait")
-                # self.do_wait.wait()
-
+            # print("View said to wait")
+            # self.do_wait.wait()
 
     def show_main_menu(self):
         self.current_view = self.main_menu
-
 
     def go(self):
         self.do_wait.clear()
