@@ -12,7 +12,7 @@ from pyray import WHITE, RAYWHITE, GRAY, BLACK, ORANGE
 
 import bluetooth
 import deviceio
-from deviceio import DeviceIO, SERVO, LANE1, LANE2, LANE3, LANE4
+from deviceio import DeviceIO, SERVO, LANE1, LANE2, LANE3, LANE4, JOYL, JOYR, JOYD, JOYP, JOYU
 
 from config import Config, NOT_FINISHED
 from coordinator import Coordinator
@@ -33,7 +33,9 @@ def main():
     init_display()
     device = DeviceIO()
 
-    track = Track(MainMenu(), config, device)
+    # main_menu = MainMenu()
+
+    track = Track(config, device)
 
     # display.main_menu()
     # This somehow inits the GL context so actual drawing can happen
@@ -44,7 +46,6 @@ def main():
     time.sleep(2)
 
     while not pr.window_should_close():
-        # time.sleep(1)
         track.loop()
 
 

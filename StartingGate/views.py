@@ -6,17 +6,16 @@ from pyray import WHITE, RAYWHITE, GRAY, BLACK, ORANGE, LIGHTGRAY
 
 class View(ABC):
     def __init__(self):
-        self.font = pr.load_font("fonts/Roboto-Black.ttf")
+        self.font = pr.load_font_ex("fonts/Roboto-Black.ttf", 32, None, 0)
 
-    def draw(self, config):
+    def draw(self, config, **kwargs):
         pr.begin_drawing()
         pr.clear_background(RAYWHITE)
-        print("drawing")
-        self._draw(config)
+        self._draw(config, **kwargs)
 
         pr.end_drawing()
 
-    def _draw(self, config):
+    def _draw(self, config, **kwargs):
         assert 0, "draw not implemented"
 
     def _text_box(self, text, x, y, width, height, size, gray=False):
@@ -32,11 +31,11 @@ class View(ABC):
         pr.draw_rectangle_lines(x, y, width, height, BLACK)
         pr.draw_text_ex(self.font, text, pr.Vector2(x + 10, y + 2), size, 5, BLACK)
 
-    def __menu_line(self, state, x, y, width, height, size):
+    def _menu_line(self, text, x, y, width, height, size):
         """
         Display line of menu text corresponding to specified MenuState location
         """
-        self._text_box(TEXT[state], x, y, width, height, size, self.cursor_pos == state)
+        self._text_box(text, x, y, width, height, size, False)
 
 
 class DummyView(View):
@@ -47,7 +46,7 @@ class DummyView(View):
 
 class MainMenuView(View):
 
-    def __init__(self, ):
+    def __init__(self):
         super().__init__()
         print("Loading main menu textures")
 
@@ -67,8 +66,7 @@ class MainMenuView(View):
         self.configure_texture = pr.load_texture_from_image(configure_image)
         pr.unload_image(configure_image)
 
-    def _draw(self, config):
-        print("main menu")
+    def _draw(self, config, **kwargs):
         pr.draw_texture(self.background_texture, 0, 0, WHITE)
 
         pr.draw_texture(self.single_track_texture, 10, 45, WHITE)
@@ -80,44 +78,55 @@ class MainMenuView(View):
 
         pr.draw_texture(self.configure_texture, 10, 155, WHITE)
 
-@dataclass
-class MenuItem:
-    label: str
-    next_view: View
+
+class ConfigMenuView(View):
 
 
-class ConfigMenu(View):
+    def __init__(self):
+        super().__init__()
+        # self.menu_items = [
+        #     MenuItem("Track Name", DummyView),
+        #     MenuItem("# of Lanes", DummyView),
+        #     MenuItem("Car Icons", DummyView),
+        #     MenuItem("Circuit Name", DummyView),
+        #     MenuItem("Race Timeout", DummyView),
+        #     MenuItem("WiFi Setup", DummyView),
+        #     MenuItem("Coordinator Setup", DummyView),
+        #     MenuItem("Servo Limits", DummyView),
+        #     MenuItem("Reset", DummyView)
+        # ]
+        # self.menu_items = [
+        #     "Track Name",
+        #     "# of Lanes",
+        #     "Car Icons",
+        #     "Circuit Name",
+        #     "Race Timeout",
+        #     "WiFi Setup",
+        #     "Coordinator Setup",
+        #     "Servo Limits",
+        #     "Reset"
+        # ]
 
-    def scroll_down(self):
-        pass
+    def _draw(self, config, **kwargs):
+        for idx, menu in enumerate(kwargs['menu_items']):
+            self._menu_line(menu.label, 10, idx*56+16, 210, 40, 26)
 
-    def scroll_up(self):
-        pass
 
-    def __init__(self, config):
-        super().__init__(config)
-        self.menu_items = [
-            MenuItem("Track Name", DummyView),
-            MenuItem("# of Lanes", DummyView),
-            MenuItem("Car Icons", DummyView),
-            MenuItem("Circuit Name", DummyView),
-            MenuItem("Race Timeout", DummyView),
-            MenuItem("WiFi Setup", DummyView),
-            MenuItem("Coordinator Setup", DummyView),
-            MenuItem("Servo Limits", DummyView),
-            MenuItem("Reset", DummyView)
-        ]
-        self.menu_items = [
-            "Track Name",
-            "# of Lanes",
-            "Car Icons",
-            "Circuit Name",
-            "Race Timeout",
-            "WiFi Setup",
-            "Coordinator Setup",
-            "Servo Limits",
-            "Reset"
-        ]
-
-    def _draw(self):
-        pass
+    # def __menu_line(self, text, x, y, width, height, size):
+    #     """
+    #     Display line of menu text corresponding to specified MenuState location
+    #     """
+    #     self.__text_box(text, x, y, width, height, size)
+    #
+    # def __text_box(self, text, x, y, width, height, size, gray=False):
+    #     """
+    #     Draw a box at position (x,y) with specified width and height.
+    #     Display text with point size size within the box.
+    #     If gray=True, set the box fill color to gray and the text color to white
+    #     """
+    #     if gray:
+    #         pr.draw_rectangle(x, y, width, height, LIGHTGRAY)
+    #     else:
+    #         pr.draw_rectangle(x, y, width, height, WHITE)
+    #     pr.draw_rectangle_lines(x, y, width, height, BLACK)
+    #     pr.draw_text_ex(self.font, text, pr.Vector2(x+10, y+2), size, 5, BLACK)
