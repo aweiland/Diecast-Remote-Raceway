@@ -86,6 +86,9 @@ class Track:
 
         self._main_menu = MainMenu()
         self._main_menu.context = self
+
+        self._configure_menu = ConfigureMenu()
+        self._configure_menu.context = self
         # self.states = StateStack(initial_state)
         self.current_state: TrackState = self._main_menu
         self.current_state.enter()
@@ -115,6 +118,12 @@ class Track:
     def reset(self):
         pass
 
+    def main_menu(self):
+        self.set_state(self._main_menu)
+
+    def configure_menu(self):
+        self.set_state(self._configure_menu)
+
 
 # @singleton
 class MainMenu(TrackState):
@@ -128,11 +137,11 @@ class MainMenu(TrackState):
 
     def __configure(self):
         print('configure')
-        self.track.set_state(ConfigureMenu)
+        self.context.configure_menu()
 
     def enter(self):
         self.context.device.push_key_handlers(self.__start_race, deviceio.default_key_2_handler,
-                                       self.__configure, deviceio.default_joystick_handler)
+                                              self.__configure, deviceio.default_joystick_handler)
 
     def exit(self):
         self.context.device.pop_key_handlers()
@@ -144,7 +153,14 @@ class MainMenu(TrackState):
 
 
 class DummyMenu(TrackState):
-    pass
+    def enter(self):
+        pass
+
+    def exit(self):
+        pass
+
+    def loop(self):
+        pass
 
 
 # @singleton
@@ -157,29 +173,29 @@ class ConfigureMenu(TrackState):
     def __init__(self):
         self.current_menu_item = 0
         self.menu_items = [
-            ConfigureMenu.MenuItem("Track Name", ConfigureMenu),
-            ConfigureMenu.MenuItem("# of Lanes", ConfigureMenu),
-            ConfigureMenu.MenuItem("Car Icons", ConfigureMenu),
-            ConfigureMenu.MenuItem("Circuit Name", ConfigureMenu),
-            ConfigureMenu.MenuItem("Race Timeout", ConfigureMenu),
-            ConfigureMenu.MenuItem("WiFi Setup", ConfigureMenu),
-            ConfigureMenu.MenuItem("Coordinator", ConfigureMenu),
-            ConfigureMenu.MenuItem("Servo Limits", ConfigureMenu),
-            ConfigureMenu.MenuItem("Reset", ConfigureMenu)
+            ConfigureMenu.MenuItem("Track Name", DummyMenu()),
+            ConfigureMenu.MenuItem("# of Lanes", DummyMenu()),
+            ConfigureMenu.MenuItem("Car Icons", DummyMenu()),
+            ConfigureMenu.MenuItem("Circuit Name", DummyMenu()),
+            ConfigureMenu.MenuItem("Race Timeout", DummyMenu()),
+            ConfigureMenu.MenuItem("WiFi Setup", DummyMenu()),
+            ConfigureMenu.MenuItem("Coordinator", DummyMenu()),
+            ConfigureMenu.MenuItem("Servo Limits", DummyMenu()),
+            ConfigureMenu.MenuItem("Reset", DummyMenu())
         ]
         self.view = ConfigMenuView()
 
-    def enter(self, track: Track):
+    def enter(self):
         def __joystick_handler(btn):
             print("menu: btn.pin: ", btn.pin, "self.cursor_pos: ", self.current_menu_item)
             if btn.pin == JOYL.pin:
-                track.set_state(MainMenu)
+                self.context.main_menu()
 
-        track.device.push_key_handlers(deviceio.default_key_1_handler, deviceio.default_key_2_handler,
-                                       deviceio.default_key_2_handler, __joystick_handler)
+        self.context.device.push_key_handlers(deviceio.default_key_1_handler, deviceio.default_key_2_handler,
+                                              deviceio.default_key_2_handler, __joystick_handler)
 
-    def exit(self, track: Track):
-        track.device.pop_key_handlers()
+    def exit(self):
+        self.context.device.pop_key_handlers()
 
-    def loop(self, track: Track):
-        self.view.draw(track.config, menu_items=self.menu_items[4:])
+    def loop(self):
+        self.view.draw(self.context.config, menu_items=self.menu_items[4:])
