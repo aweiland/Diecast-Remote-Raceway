@@ -27,6 +27,14 @@ def init_display():
     pr.set_target_fps(30)
     pr.hide_cursor()
 
+    # display.main_menu()
+    # This somehow inits the GL context so actual drawing can happen
+    pr.begin_drawing()
+    pr.clear_background(RAYWHITE)
+    print("startup")
+    pr.end_drawing()
+    time.sleep(2)
+
 def main():
     config = Config("/home/aweiland/StartingGate/config/starting_gate.json")
     # display = Display(config)
@@ -37,13 +45,6 @@ def main():
 
     track = Track(config, device)
 
-    # display.main_menu()
-    # This somehow inits the GL context so actual drawing can happen
-    pr.begin_drawing()
-    pr.clear_background(RAYWHITE)
-    print("startup")
-    pr.end_drawing()
-    time.sleep(2)
 
     while not pr.window_should_close():
         track.loop()
