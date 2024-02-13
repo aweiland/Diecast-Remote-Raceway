@@ -218,14 +218,14 @@ class WaitForFinish(TrackState):
         nearby_devices = bluetooth.discover_devices()
 
         for bdaddr in nearby_devices:
-            if self.context.config.target_name == bluetooth.lookup_name(bdaddr):
+            if self.context.config.finish_line_name == bluetooth.lookup_name(bdaddr):
                 target_address = bdaddr
                 break
 
         if target_address is None:
-            print("could not find ", self.context.config.target_name, " nearby")
+            print("could not find ", self.context.config.finish_line_name, " nearby")
         else:
-            print("Found ", self.context.config.target_name, ", connecting...")
+            print("Found ", self.context.config.finish_line_name, ", connecting...")
             socket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
             socket.connect((target_address, port))
             self.context.poller.register(socket, READ_ONLY)
@@ -237,7 +237,7 @@ class WaitForFinish(TrackState):
 
 
 class WaitForCars(TrackState):
-
+    """Wait for cars to be places on track sensors"""
     def __init__(self):
         super().__init__()
         self.lanes = [LANE1, LANE2, LANE3, LANE4]
@@ -246,7 +246,7 @@ class WaitForCars(TrackState):
     def _all_lanes_ready(self):
         ready = True
         for x in range(self.context.config.num_lanes):
-            ready = ready and x.value == 1
+            ready = ready and self.lanes[x].value == 1
 
         return ready
 

@@ -44,6 +44,7 @@ def main():
     # main_menu = MainMenu()
 
     track = Track(config, device)
+    track.wait_for_finish()
 
 
     while not pr.window_should_close():

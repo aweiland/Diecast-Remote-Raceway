@@ -141,6 +141,11 @@ class Config:
 
     def __init__(self, filename):
         self.__filename = filename
+        # Initialize so IDEs can find the values
+        self.num_lanes = 0
+        self.allow_multi_track = False
+        self.circuit = ""
+
         # Initialize all config attributes with their default values
         for cfg in PERSISTED_CONFIGS + EPHEMERAL_CONFIGS:
             print("setting ", cfg, " to ", Config.DEFAULT[cfg])
