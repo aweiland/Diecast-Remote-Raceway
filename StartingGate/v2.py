@@ -1,23 +1,14 @@
-import enum
-import json
-import operator
-import select
 import time
-import traceback
-import threading
-from abc import ABC
 
 import pyray as pr
 from pyray import WHITE, RAYWHITE, GRAY, BLACK, ORANGE
 
-import bluetooth
 import deviceio
 from deviceio import DeviceIO, SERVO, LANE1, LANE2, LANE3, LANE4, JOYL, JOYR, JOYD, JOYP, JOYU
 
 from config import Config, NOT_FINISHED
 from coordinator import Coordinator
 # from displayv2 import Display, MainMenuView, init_display
-# from statemachine import StateMachine, State
 
 from track import Track, MainMenu
 
@@ -41,7 +32,6 @@ def main():
     init_display()
     device = DeviceIO()
 
-    # main_menu = MainMenu()
 
     track = Track(config, device)
     track.wait_for_finish()

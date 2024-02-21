@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from typing import Type
 import pyray as pr
 from pyray import WHITE, RAYWHITE, GRAY, BLACK, ORANGE, LIGHTGRAY
-from config import Config
+from config import Config, NOT_FINISHED
 
 
 def load_texture(filename):
@@ -40,6 +40,10 @@ class View(ABC):
             pr.draw_rectangle(x, y, width, height, WHITE)
         pr.draw_rectangle_lines(x, y, width, height, BLACK)
         pr.draw_text_ex(self.font, text, pr.Vector2(x + 10, y + 2), size, 5, BLACK)
+
+    def _text_box_dense(self, text, x, y, width, height, size):
+        pr.draw_rectangle(x, y, width, height, WHITE)
+        pr.draw_text_ex(self.font, text, pr.Vector2(x + 2, y + 2), size, 2, BLACK)
 
     def _menu_line(self, text, x, y, width, height, size):
         """
@@ -97,39 +101,26 @@ class TrackView(View, ABC):
         self._draw_lanes(config)
 
     def _draw_lanes(self, config):
+        pr.draw_line_ex([35, 40], [35, 230], 34.0, ORANGE)
+        pr.draw_line_ex([80, 40], [80, 230], 34.0, ORANGE)
+
+        pr.draw_texture(self.checkerboard_small_texture, 18, 196, WHITE)
+        pr.draw_texture(self.checkerboard_small_texture, 63, 196, WHITE)
+
+        # Divider line
         if config.multi_track:
-            pr.draw_text(config.track_name, 10, 10, 24, ORANGE)
-            pr.draw_text(config.remote_track_name, 130, 10, 24, BLACK)
             pr.draw_line_ex([120, 5], [120, 235], 4.0, BLACK)
 
-            pr.draw_line_ex([35, 40], [35, 230], 34.0, ORANGE)
-            pr.draw_line_ex([80, 40], [80, 230], 34.0, ORANGE)
+        pr.draw_line_ex([155, 40], [155, 230], 34.0, ORANGE)
+        pr.draw_line_ex([200, 40], [200, 230], 34.0, ORANGE)
 
-            pr.draw_texture(self.checkerboard_small_texture, 18, 196, WHITE)
-            pr.draw_texture(self.checkerboard_small_texture, 63, 196, WHITE)
+        pr.draw_texture(self.checkerboard_small_texture, 138, 196, WHITE)
+        pr.draw_texture(self.checkerboard_small_texture, 183, 196, WHITE)
+        # pr.draw_line_ex([64, 10], [64, 230], 64.0, ORANGE)
+        # pr.draw_line_ex([164, 10], [164, 230], 64.0, ORANGE)
 
-            pr.draw_line_ex([155, 40], [155, 230], 34.0, ORANGE)
-            pr.draw_line_ex([200, 40], [200, 230], 34.0, ORANGE)
-
-            pr.draw_texture(self.checkerboard_small_texture, 138, 196, WHITE)
-            pr.draw_texture(self.checkerboard_small_texture, 183, 196, WHITE)
-        else:
-            pr.draw_line_ex([35, 40], [35, 230], 34.0, ORANGE)
-            pr.draw_line_ex([80, 40], [80, 230], 34.0, ORANGE)
-
-            pr.draw_texture(self.checkerboard_small_texture, 18, 196, WHITE)
-            pr.draw_texture(self.checkerboard_small_texture, 63, 196, WHITE)
-
-            pr.draw_line_ex([155, 40], [155, 230], 34.0, ORANGE)
-            pr.draw_line_ex([200, 40], [200, 230], 34.0, ORANGE)
-
-            pr.draw_texture(self.checkerboard_small_texture, 138, 196, WHITE)
-            pr.draw_texture(self.checkerboard_small_texture, 183, 196, WHITE)
-            # pr.draw_line_ex([64, 10], [64, 230], 64.0, ORANGE)
-            # pr.draw_line_ex([164, 10], [164, 230], 64.0, ORANGE)
-
-            # pr.draw_texture(self.checkerboard_texture, 32, 166, WHITE)
-            # pr.draw_texture(self.checkerboard_texture, 132, 166, WHITE)
+        # pr.draw_texture(self.checkerboard_texture, 32, 166, WHITE)
+        # pr.draw_texture(self.checkerboard_texture, 132, 166, WHITE)
 
     def _draw_cars(self, config, car_positions, car_status=None):
         # pylint: disable=bad-whitespace
@@ -141,7 +132,7 @@ class TrackView(View, ABC):
         else:
             question_texture = self.question_small_texture
 
-        car_textures = [self.car_textures[ind] if status else question_texture for ind, status in enumerate(car_status)]
+        car_textures = [self.car_textures[idx] if status else question_texture for idx, status in enumerate(car_status)]
 
         if config.multi_track:
             # FIXME
@@ -223,17 +214,76 @@ class CountdownView(TrackView):
 
 
 class RaceRunningView(TrackView):
-
     MAX_Y = 150
 
     def _draw(self, config, **kwargs):
         car_positions = kwargs['car_positions']
         time_delta = kwargs['time_delta']
         delta_bytes = bytes('{:06.3f}'.format(time_delta), 'ascii')
-
+        self._draw_background(config)
         self._draw_cars(config, car_positions)
         self._text_box(delta_bytes, 26, 95, 180, 55, 50)
         pass
+
+
+class ResultsView(TrackView):
+    '''Draw race results'''
+
+    # 2 lanes
+    LARGE_X_POS = [40, 140]
+    # > 2 lanes
+    SMALL_X_POS = [22, 68, 142, 188]
+
+    def __init__(self):
+        super().__init__()
+        self.place_small_textures = [
+            load_texture("images/1st-24.png"),
+            load_texture("images/2nd-24.png"),
+            load_texture("images/3rd-24.png"),
+            load_texture("images/fail-24.png")
+        ]
+        self.place_large_textures = [
+            load_texture("images/1st-48.png"),
+            load_texture("images/2nd-48.png"),
+            load_texture("images/3rd-48.png"),
+            load_texture("images/fail-48.png")
+        ]
+
+        self.fail_small_texture = load_texture("images/fail-48.png")
+        self.fail_large_texture = load_texture("images/fail-96.png")
+
+    def _draw_result(self, track_count, track_number, lane_number, lane_time, place):
+        print(f"Drawing result for lane {lane_number}/{track_count}")
+        # x_offset = 10 + (lane_number - 1) * 48 + (track_number - 1) * 120
+        x_offset = self.LARGE_X_POS[lane_number-1] if track_count < 3 else self.SMALL_X_POS[lane_number-1]-10
+        y_offset = 20 + place * 50
+        time_y_offset = 204
+        time_width = 46
+
+        fail_texture = self.fail_small_texture if track_count > 2 else self.fail_large_texture
+        place_textures = self.place_large_textures if track_count > 2 else self.place_large_textures
+
+        print(f"Drawing place {place} at {x_offset},{y_offset}")
+        texture = fail_texture if lane_time == NOT_FINISHED else place_textures[place]
+        pr.draw_texture(texture, x_offset, y_offset, WHITE)
+
+        if lane_time == NOT_FINISHED:
+            display_time = "FAIL"
+        else:
+            display_time = "{:.3f}".format(lane_time)
+        if track_count == 1:
+            self._text_box(display_time, x_offset, time_y_offset, time_width, 30, 28)
+        else:
+            self._text_box_dense(display_time, x_offset, time_y_offset, time_width, 20, 16)
+
+    def _draw(self, config, **kwargs):
+        self._draw_background(config)
+        self._draw_cars(config, [RaceRunningView.MAX_Y] * 4)
+        results = kwargs['results']
+        print(results)
+        for idx, result in enumerate(results):
+            # track_num = 1 if result.lane_number < 2 else 2
+            self._draw_result(config.num_lanes, 1, result.lane_number, result.lane_time, idx)
 
 
 class ConfigMenuView(View):

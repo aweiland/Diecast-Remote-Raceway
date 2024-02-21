@@ -1,5 +1,6 @@
 import asyncio
 import math
+import operator
 import threading
 from dataclasses import dataclass
 
@@ -12,53 +13,15 @@ import select
 import bluetooth
 from abc import ABC, abstractmethod
 
-from views import MainMenuView, ConfigMenuView, WaitForFinishView, CountdownView, RaceRunningView, WaitForCarsView
-from config import Config
+from views import MainMenuView, ConfigMenuView, WaitForFinishView, CountdownView, RaceRunningView, WaitForCarsView, \
+    ResultsView
+from config import Config, NOT_FINISHED
 import deviceio
 from deviceio import DeviceIO, SERVO, LANE1, LANE2, LANE3, LANE4, JOYL, JOYR, JOYD, JOYP, JOYU
+from starting_gate import purge_bluetooth_messages, reset_starting_gate, all_lanes_ready, all_lanes_empty, \
+    release_starting_gate, NANOSECONDS_TO_SECONDS
 
 READ_ONLY = select.POLLIN | select.POLLPRI | select.POLLHUP | select.POLLERR
-
-
-def purge_bluetooth_messages(socket):
-    """ Read any residual data from the Finish Line bluetooth connection.
-
-    Before adding the BGIN/ENDR message exchange to prevent the finish line
-    from sending results when something passed over a lane when no race was
-    active, this purge was critical. Otherwise pending messages (for example
-    from someone picking up a car from the finish line) would register before
-    a car actually reached the finish line.
-
-    Now reading data should be rare and probably indicates a problem in the
-    finish line's debounce logic for the IR sensors. Nevertheless, a millisecond
-    delay to read any outstanding data on the socket seems like a reasonable
-    defensive act.
-    """
-
-    prior_timeout = socket.gettimeout()
-    socket.settimeout(0.01)  # wait 1ms for any residual messages
-    try:
-        socket.recv(1024)  # Purge any messages from the Finish Line
-    except bluetooth.btcommon.BluetoothError as exc:
-        if exc.args[0] == 'timed out':
-            print("purge_bluetooth_messages(): BluetoothError = timed out, ignoring.")
-        else:
-            # Re raise any other bluetooth exception so the main loop will reconnect
-            print("purge_bluetooth_messages(): BluetoothError, other reason =", exc.args)
-            raise exc
-    socket.settimeout(prior_timeout)
-
-
-def reset_starting_gate(config):
-    """ Set servo to midpoint position to close the starting gate """
-    SERVO.value = config.servo_up_value
-    time.sleep(0.1)
-    SERVO.value = None  # Stop PWM signal to servo to prevent humm/jitter and reduce wear
-
-
-def release_starting_gate(config):
-    """ Set servo to max position to release the starting gate """
-    SERVO.value = config.servo_down_value
 
 
 class TrackState(ABC):
@@ -86,27 +49,6 @@ class TrackState(ABC):
         pass
 
 
-class StateStack:
-    """
-    A Stack of states.  The first state added can never be popped off and is
-    assumed to be the main menu
-    """
-
-    def __init__(self, initial_state):
-        self.states = [initial_state]
-
-    def current(self) -> TrackState:
-        return self.states[-1]
-
-    def push(self, new_state: TrackState):
-        self.states.append(new_state)
-
-    def pop(self) -> TrackState:
-        if len(self.states) > 1:
-            return self.states.pop()
-        return self.current()
-
-
 class Track:
 
     def __init__(self, config: Config, device: DeviceIO):
@@ -116,6 +58,8 @@ class Track:
 
         self.socket = None
         self.poller = select.poll()
+        self.car_positions = [0] * 4
+        self.finish_times = [NOT_FINISHED] * 4
 
         self._main_menu = MainMenu()
         self._main_menu.context = self
@@ -134,6 +78,9 @@ class Track:
 
         self._race_running = RaceRunning()
         self._race_running.context = self
+
+        self._race_finished = RaceFinished()
+        self._race_finished.context = self
 
         # self.states = StateStack(initial_state)
         self.current_state: TrackState = self._main_menu
@@ -168,6 +115,9 @@ class Track:
 
     def run_race(self):
         self.set_state(self._race_running)
+
+    def race_finished(self):
+        self.set_state(self._race_finished)
 
 
 class MainMenu(TrackState):
@@ -215,6 +165,7 @@ class WaitForFinish(TrackState):
         target_address = None
         port = 1
 
+        print("Looking for BT devices")
         nearby_devices = bluetooth.discover_devices()
 
         for bdaddr in nearby_devices:
@@ -238,6 +189,7 @@ class WaitForFinish(TrackState):
 
 class WaitForCars(TrackState):
     """Wait for cars to be places on track sensors"""
+
     def __init__(self):
         super().__init__()
         self.lanes = [LANE1, LANE2, LANE3, LANE4]
@@ -279,12 +231,24 @@ class Countdown(TrackState):
         self.view.draw(self.context.config, timer=timer)
 
 
+def lane_index(msg):
+    """
+    Convert finished message received from the Finish Line to a lane index.
+
+    Lanes are named Lane1 through Lane4, but arrays are zero indexed.  So the "FIN1"
+    message indicates that the lane with an index position of 0 is finished.
+    """
+    lane_number = int(msg[3])
+    return lane_number - 1
+
+
 class RaceRunning(TrackState):
 
     def __init__(self):
         super().__init__()
         self.race_aborted = False
         self.start_time = 0
+        self.timeout = 0
         self.view = RaceRunningView()
         self.car_positions = [0] * 4
         self.progress_threshold = 0.4
@@ -292,27 +256,52 @@ class RaceRunning(TrackState):
     def enter(self):
         self.start_time = time.monotonic()
         self.race_aborted = False
-        self.start_time = 0
         self.car_positions = [0] * 4
+        self.context.finish_times = [NOT_FINISHED] * 4
 
-        self.context.socket.send("BGIN")
+        self.timeout = (self.start_time + self.context.config.race_timeout) * NANOSECONDS_TO_SECONDS
 
-        purge_bluetooth_messages(self.context.socket)
+        # Prevent errors when running a demo
+        if self.context.socket:
+            self.context.socket.send("BGIN")
+            purge_bluetooth_messages(self.context.socket)
+
+        self.view.load_car_images(self.context.config)
 
         print("Start the race!")
         release_starting_gate(self.context.config)
 
-    def exit(self):
-        pass
+    def lane_finished(self, lane):
+        """
+        Record the finish time for the specified lane in the times array
+        """
+        if self.context.finish_times[lane] != NOT_FINISHED:
+            print("lane ", lane + 1, " reported redundant finish")
+            return
+
+        end = time.monotonic_ns()
+        delta = float(end - self.start_time) / NANOSECONDS_TO_SECONDS
+        print("Lane %d finished. Elapsed time: %6.3f" % (lane + 1, delta))
+        self.context.finish_times[lane] = delta
+
+    def all_lanes_finished(self):
+        """
+        Returns True if all configured lanes have finished.  False otherwise.
+        """
+        for lane in range(self.context.config.num_lanes):
+            if self.context.finish_times[lane] == NOT_FINISHED:
+                return False
+        return True
 
     def loop(self):
         delta = time.monotonic() - self.start_time
 
         for car in range(self.context.config.num_lanes):
             if random.random() < self.progress_threshold and self.car_positions[car] < self.view.MAX_Y:
-                self.car_positions[car] += 1
+                # print("Incrementing car")
+                self.car_positions[car] += 5
 
-        if not all_lanes_finished() and not self.race_aborted and time.monotonic_ns() < timeout:
+        if not self.all_lanes_finished() and not self.race_aborted and time.monotonic() < self.timeout:
             try:
                 events = self.context.poller.poll(100)
                 if events:
@@ -322,17 +311,23 @@ class RaceRunning(TrackState):
                     print("received ", msg)
 
                     if msg.startswith("FIN"):
-                        lane_finished(lane_index(msg), finish_times)
+                        self.lane_finished(lane_index(msg), self.context.finish_times)
 
             except bluetooth.btcommon.BluetoothError as exc:
                 if exc.args[0] == 'timed out':
                     print("Timeout waiting for race results. Finishing race")
+                    self.context.race_finished()
                 else:
                     print("purge_bluetooth_messages(): BluetoothError, other reason =", exc.args)
                     raise exc
         else:
+            print(
+                f"finished {self.all_lanes_finished()}, aborted {self.race_aborted}, timeout at {time.monotonic_ns()} < {self.timeout}")
             self.context.socket.send("ENDR")
+            self.context.car_positions = self.car_positions
             self.context.race_finished()
+
+        self.view.draw(self.context.config, car_positions=self.car_positions, time_delta=delta)
 
         # Send end of race message to Finish Line to disable further completion messages
 
@@ -340,19 +335,40 @@ class RaceRunning(TrackState):
         #     if random.random() < self.progress_threshold and self.remote_y[car] < Display._MAX_Y:
         #         self.remote_y[car] += 1
 
-        self.view.draw(self.context.config, car_positions=self.car_positions, time_delta=delta)
-
 
 class RaceFinished(TrackState):
+    @dataclass
+    class FinishData:
+        track_name: str
+        lane_number: int
+        lane_time: float
+
+    def __init__(self):
+        super().__init__()
+        self.view = ResultsView()
+        self.results = []
 
     def enter(self):
-        pass
+        results = []
+        for lane in range(self.context.config.num_lanes):
+            # result = {}
+            # result["trackName"] = self.context.config.track_name
+            # result["laneNumber"] = lane + 1
+            # result["laneTime"] = self.context.finish_times[lane]
+            # results.append(result)
+            results.append(RaceFinished.FinishData(
+                track_name=self.context.config.track_name,
+                lane_number=lane + 1,
+                lane_time=self.context.finish_times[lane]
+            ))
 
-    def exit(self):
-        pass
+        # results.sort(key=operator.itemgetter('laneTime'))
+        results.sort(key=lambda result: result.lane_time)
+        self.results = results
+        self.view.load_car_images(self.context.config)
 
     def loop(self):
-        pass
+        self.view.draw(self.context.config, results=self.results)
 
 
 class DummyMenu(TrackState):
@@ -405,39 +421,25 @@ class ConfigureMenu(TrackState):
         self.view.draw(self.context.config, menu_items=self.menu_items[4:])
 
 
-def run_track(track):
-    while True:
-        track.loop()
-
-
-def run_race(track):
-    time.sleep(2)
-    track.main_menu()
-    time.sleep(2)
-    track.wait_for_finish()
-    time.sleep(2)
-    track.countdown()
-
-
 def run_sample_race():
     from v2 import init_display
 
     config = Config("/home/aweiland/StartingGate/config/starting_gate.json")
-    # display = Display(config)
     init_display()
     device = DeviceIO()
     track = Track(config, device)
-
-    # t = threading.Thread(target=run_race, args=(track,))
-    # t.start()
 
     time.sleep(2)
     track.main_menu()
     track.loop()
     time.sleep(2)
-    track.wait_for_finish()
+    # track.wait_for_finish()
+    # track.loop()
+    # time.sleep(2)
+
+    track.wait_for_cars()
     track.loop()
-    time.sleep(2)
+    time.sleep(1)
 
     track.countdown()
     track.loop()
@@ -446,22 +448,17 @@ def run_sample_race():
     time.sleep(1)
     track.loop()
 
-    time.sleep(3)
+    track.run_race()
+    for x in range(5):
+        track.loop()
+        time.sleep(0.01)
+    time.sleep(1)
 
-    # while True:
-    #     track.loop()
-    #     pass
-
-    # loop = asyncio.create_task(run_track(track))
-    # await asyncio.gather(
-    #     run_race(track),
-    #     run_track(track),
-    # )
-    # async with asyncio.TaskGroup as tg:
-    #     tg.create_task(run_race(track))
-    #     tg.create_task(run_race(track))
+    track.finish_times = [5.0, 2.3, 6.0, 4.2]
+    track.race_finished()
+    track.loop()
+    time.sleep(15)
 
 
 if __name__ == '__main__':
     run_sample_race()
-    # asyncio.run(run_sample_race())

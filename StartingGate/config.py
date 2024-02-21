@@ -41,7 +41,7 @@ import sys
 
 # Sentinel value indicating that a car did not complete the race within the timeout period.
 # If the finish time for a lane is NOT_FINISHED, display the failure icon for that lane.
-NOT_FINISHED = sys.float_info.max
+NOT_FINISHED = float(sys.float_info.max)
 
 # Constants for indexing into car_icons array
 CAR1 = 0
@@ -140,11 +140,15 @@ class Config:
     DEFAULT[WIFI_SSID] = "<WIFI_SSID>"
 
     def __init__(self, filename):
+        self.track_name = None
+        self.race_timeout = None
         self.__filename = filename
         # Initialize so IDEs can find the values
         self.num_lanes = 0
         self.allow_multi_track = False
         self.circuit = ""
+        self.finish_line_name = ""
+        self.servo_down_value = 0
 
         # Initialize all config attributes with their default values
         for cfg in PERSISTED_CONFIGS + EPHEMERAL_CONFIGS:

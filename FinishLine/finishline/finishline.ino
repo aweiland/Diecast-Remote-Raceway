@@ -20,13 +20,14 @@ full license information.
 
 */
 
+
 #include "BluetoothSerial.h"
 
 #if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
 #error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
 #endif
 
-#include <string>
+// #include <string>
 #include <map>
 
 #include <Arduino.h>
@@ -47,10 +48,10 @@ const char* configFilename = "/config.json";
 
 // Adjust defaults as you see fit
 #define URLLEN 80
-#define DEFAULT_WIFI_SSID "<SSID>"
-#define DEFAULT_WIFI_PASSWORD "<PASSWORD>"
+#define DEFAULT_WIFI_SSID "yoginet"
+#define DEFAULT_WIFI_PASSWORD "maggiedog"
 #define DEFAULT_BT_ADVERTISEMENT "FinishLine"
-#define DEFAULT_CONTROLLER_HOSTNAME "<CONTROLLER_HOST>"
+#define DEFAULT_CONTROLLER_HOSTNAME "nas.weiland.site"
 #define DEFAULT_CONTROLLER_PORT 1968
 #define MAX_CONFIG_SIZE 256
 #define MAX_LANES 4
@@ -432,7 +433,7 @@ void processMessage() {
       deleteConfig();
       break;
     case UNKNOWN:
-      Serial.println("Received unknown command.");
+      Serial.println(F("Received unknown command."));
       break;
   }
 }
