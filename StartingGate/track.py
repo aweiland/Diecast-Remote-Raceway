@@ -147,7 +147,7 @@ class MainMenu(TrackState):
 
 
 class WaitForFinish(TrackState):
-
+    '''TODO Make this async to start'''
     def __init__(self):
         super().__init__()
         self.view = WaitForFinishView()
@@ -444,7 +444,7 @@ class ConfigureMenu(TrackState):
         self.context.device.pop_key_handlers()
 
     def loop(self):
-        self.view.draw(self.context.config, menu_items=self.menu_items[4:], current_menu_item=self.current_menu_item)
+        self.view.draw(self.context.config, menu_items=self.menu_items, current_menu_item=self.current_menu_item)
 
 
 def run_sample_race():

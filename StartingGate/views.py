@@ -319,13 +319,11 @@ class ConfigMenuView(View):
         selected_item = kwargs['current_menu_item']
         current_item = 0
 
-        top_item = selected_item - self.DISPLAYABLE_ITEMS
+        top_item = selected_item - self.DISPLAYABLE_ITEMS + 1
 
-        first_item = top_item if top_item <= 0 else 0
+        first_item = top_item if top_item > 0 else 0
 
         for idx, menu in enumerate(kwargs['menu_items']):
-            # if selected_item >= self.DISPLAYABLE_ITEMS:
-            #     continue
             if idx < first_item:
                 continue
 
