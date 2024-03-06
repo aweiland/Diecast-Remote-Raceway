@@ -28,22 +28,23 @@ Device.pin_factory = PiGPIOFactory()
 #
 # pylint: disable=bad-whitespace
 
-JOYU =  Button("GPIO6",  True, None, 0.020)                    # Pin 31
-JOYD =  Button("GPIO19", True, None, 0.020)                    # Pin 35
-JOYL =  Button("GPIO5",  True, None, 0.020)                    # Pin 29
-JOYR =  Button("GPIO26", True, None, 0.020)                    # Pin 37
-JOYP =  Button("GPIO13", True, None, 0.020)                    # Pin 33
+JOYU = Button("GPIO6", True, None, 0.020)  # Pin 31
+JOYD = Button("GPIO19", True, None, 0.020)  # Pin 35
+JOYL = Button("GPIO5", True, None, 0.020)  # Pin 29
+JOYR = Button("GPIO26", True, None, 0.020)  # Pin 37
+JOYP = Button("GPIO13", True, None, 0.020)  # Pin 33
 
-KEY_1 = Button("GPIO21", True, None, 0.100)                    # Pin 40
-KEY_2 = Button("GPIO20", True, None, 0.100)                    # Pin 38
-KEY_3 = Button("GPIO16", True, None, 0.100)                    # Pin 36
+KEY_1 = Button("GPIO21", True, None, 0.100)  # Pin 40
+KEY_2 = Button("GPIO20", True, None, 0.100)  # Pin 38
+KEY_3 = Button("GPIO16", True, None, 0.100)  # Pin 36
 
-LANE1 = DigitalInputDevice("GPIO7",  True, None, 0.200)        # Pin 26
-LANE2 = DigitalInputDevice("GPIO23", True, None, 0.200)        # Pin 16
-LANE3 = DigitalInputDevice("GPIO22", True, None, 0.200)        # Pin 15
-LANE4 = DigitalInputDevice("GPIO4",  True, None, 0.200)        # Pin 07
+LANE1 = DigitalInputDevice("GPIO7", True, None, 0.200)  # Pin 26
+LANE2 = DigitalInputDevice("GPIO23", True, None, 0.200)  # Pin 16
+LANE3 = DigitalInputDevice("GPIO22", True, None, 0.200)  # Pin 15
+LANE4 = DigitalInputDevice("GPIO4", True, None, 0.200)  # Pin 07
 
-SERVO = Servo("GPIO12")                                        # Pin 32
+SERVO = Servo("GPIO12")  # Pin 32
+
 
 # pylint: enable=bad-whitespace
 
@@ -53,11 +54,13 @@ def car_1_present():
     """
     return LANE1.value
 
+
 def car_2_present():
     """
     Returns True if the LANE2 sensor detects a car in the lane 2 starting gate
     """
     return LANE2.value
+
 
 def car_3_present():
     """
@@ -65,11 +68,13 @@ def car_3_present():
     """
     return LANE3.value
 
+
 def car_4_present():
     """
     Returns True if the LANE4 sensor detects a car in the lane 4 starting gate
     """
     return LANE4.value
+
 
 def default_key_1_handler():
     """
@@ -77,11 +82,13 @@ def default_key_1_handler():
     """
     print("Default KEY_1_handler")
 
+
 def default_key_2_handler():
     """
     Default handler to call when key 2 is pressed and no application handler is registered
     """
     print("Default KEY_2_handler")
+
 
 def default_key_3_handler():
     """
@@ -89,11 +96,13 @@ def default_key_3_handler():
     """
     print("Default KEY_3_handler")
 
+
 def default_joystick_handler(btn):
     """
     Default handler to call when the joystick is pressed and no application handler is registered
     """
     print("Default joystick_handler", btn)
+
 
 class DeviceIO:
     """
@@ -110,7 +119,7 @@ class DeviceIO:
 
     """
 
-# PUBLIC:
+    # PUBLIC:
     def push_key_handlers(self, key_1_fn, key_2_fn, key_3_fn, joystick):
         """
         Push new set of handlers for the input keys onto the handler stack
@@ -125,17 +134,17 @@ class DeviceIO:
         print("DeviceIO.pop_key_handlers, self=", self, " instance=", DeviceIO.instance)
         DeviceIO.instance.pop_key_handlers()
 
-# PRIVATE:
+    # PRIVATE:
 
     instance = None
 
-    class __DeviceIOSingleton: #pylint: disable=invalid-name
+    class __DeviceIOSingleton:  # pylint: disable=invalid-name
 
         def push_key_handlers(self, key_1_fn, key_2_fn, key_3_fn, joystick):
             """
             Push new set of keypress callback functions onto the appropriate stacks
             """
-            print("DeviceIOSingleton.push_key_handlers: key_1_fn=", key_1_fn)
+            # print("DeviceIOSingleton.push_key_handlers: key_1_fn=", key_1_fn.__name__)
             self.key_1_stack.append(key_1_fn)
             self.key_2_stack.append(key_2_fn)
             self.key_3_stack.append(key_3_fn)
@@ -146,7 +155,7 @@ class DeviceIO:
             Pop the most recently pu7shed set of callback functions, returning control
             to the prior set.
             """
-            print("DeviceIOSingleton.pop_key_handlers, self=", self)
+            # print("DeviceIOSingleton.pop_key_handlers, self=", self)
             self.key_1_stack.pop()
             self.key_2_stack.pop()
             self.key_3_stack.pop()

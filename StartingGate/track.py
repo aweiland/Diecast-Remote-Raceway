@@ -56,7 +56,7 @@ class Track:
         self.config = config
         self.device = device
 
-        self.socket = None
+        self.socket: bluetooth.BluetoothSocket = None
         self.poller = select.poll()
         self.car_positions = [0] * 4
         self.finish_times = [NOT_FINISHED] * 4
@@ -158,6 +158,7 @@ class WaitForFinish(TrackState):
         # clear old socket if exists
         if self.context.socket is not None:
             self.context.poller.unregister(self.context.socket)
+            self.context.socket.close()
 
     def loop(self):
         self.view.draw(self.context.config)
@@ -204,6 +205,13 @@ class WaitForCars(TrackState):
 
     def enter(self):
         print("Waiting for cars")
+        self.view.load_car_images(self.context.config)
+        reset_starting_gate(self.context.config)
+        self.context.device.push_key_handlers(self.context.main_menu, deviceio.default_key_2_handler,
+                                              deviceio.default_key_3_handler, deviceio.default_joystick_handler)
+
+    def exit(self):
+        self.context.device.pop_key_handlers()
 
     def loop(self):
         """ Scan the lane sensors to see if all lanes have cars present. """
@@ -348,8 +356,14 @@ class RaceFinished(TrackState):
         self.view = ResultsView()
         self.results = []
 
+    def __return_to_menu(self):
+        self.context.main_menu()
+
     def enter(self):
         results = []
+
+        reset_starting_gate(self.context.config)
+
         for lane in range(self.context.config.num_lanes):
             # result = {}
             # result["trackName"] = self.context.config.track_name
@@ -366,6 +380,12 @@ class RaceFinished(TrackState):
         results.sort(key=lambda result: result.lane_time)
         self.results = results
         self.view.load_car_images(self.context.config)
+
+        self.context.device.push_key_handlers(self.__return_to_menu, deviceio.default_key_2_handler,
+                                          deviceio.default_key_3_handler, deviceio.default_joystick_handler)
+
+    def exit(self):
+        self.context.device.pop_key_handlers()
 
     def loop(self):
         self.view.draw(self.context.config, results=self.results)
@@ -406,19 +426,25 @@ class ConfigureMenu(TrackState):
         self.view = ConfigMenuView()
 
     def enter(self):
-        def __joystick_handler(btn):
+        def __joystick_handler2(btn):
             print("menu: btn.pin: ", btn.pin, "self.cursor_pos: ", self.current_menu_item)
             if btn.pin == JOYL.pin:
                 self.context.main_menu()
+            elif btn.pin == JOYD.pin:
+                self.current_menu_item = (self.current_menu_item + 1) % len(self.menu_items)
+            elif btn.pin == JOYU.pin:
+                self.current_menu_item = (self.current_menu_item - 1) % len(self.menu_items)
+            elif btn.pin == JOYP.pin:
+                pass
 
         self.context.device.push_key_handlers(deviceio.default_key_1_handler, deviceio.default_key_2_handler,
-                                              deviceio.default_key_2_handler, __joystick_handler)
+                                              deviceio.default_key_2_handler, __joystick_handler2)
 
     def exit(self):
         self.context.device.pop_key_handlers()
 
     def loop(self):
-        self.view.draw(self.context.config, menu_items=self.menu_items[4:])
+        self.view.draw(self.context.config, menu_items=self.menu_items[4:], current_menu_item=self.current_menu_item)
 
 
 def run_sample_race():

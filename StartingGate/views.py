@@ -45,11 +45,11 @@ class View(ABC):
         pr.draw_rectangle(x, y, width, height, WHITE)
         pr.draw_text_ex(self.font, text, pr.Vector2(x + 2, y + 2), size, 2, BLACK)
 
-    def _menu_line(self, text, x, y, width, height, size):
+    def _menu_line(self, text, x, y, width, height, size, selected=False):
         """
         Display line of menu text corresponding to specified MenuState location
         """
-        self._text_box(text, x, y, width, height, size, False)
+        self._text_box(text, x, y, width, height, size, selected)
 
     def _text_message(self, text, inverted=False):
         if len(text) >= 16:
@@ -255,7 +255,7 @@ class ResultsView(TrackView):
     def _draw_result(self, track_count, track_number, lane_number, lane_time, place):
         print(f"Drawing result for lane {lane_number}/{track_count}")
         # x_offset = 10 + (lane_number - 1) * 48 + (track_number - 1) * 120
-        x_offset = self.LARGE_X_POS[lane_number-1] if track_count < 3 else self.SMALL_X_POS[lane_number-1]-10
+        x_offset = self.LARGE_X_POS[lane_number - 1] if track_count < 3 else self.SMALL_X_POS[lane_number - 1] - 10
         y_offset = 20 + place * 50
         time_y_offset = 204
         time_width = 46
@@ -288,6 +288,8 @@ class ResultsView(TrackView):
 
 class ConfigMenuView(View):
 
+    DISPLAYABLE_ITEMS = 4
+
     def __init__(self):
         super().__init__()
         # self.menu_items = [
@@ -314,8 +316,21 @@ class ConfigMenuView(View):
         # ]
 
     def _draw(self, config, **kwargs):
+        selected_item = kwargs['current_menu_item']
+        current_item = 0
+
+        top_item = selected_item - self.DISPLAYABLE_ITEMS
+
+        first_item = top_item if top_item <= 0 else 0
+
         for idx, menu in enumerate(kwargs['menu_items']):
-            self._menu_line(menu.label, 10, idx * 56 + 16, 210, 40, 26)
+            # if selected_item >= self.DISPLAYABLE_ITEMS:
+            #     continue
+            if idx < first_item:
+                continue
+
+            self._menu_line(menu.label, 10, current_item * 56 + 16, 210, 40, 26, idx == selected_item)
+            current_item += 1
 
     # def __menu_line(self, text, x, y, width, height, size):
     #     """

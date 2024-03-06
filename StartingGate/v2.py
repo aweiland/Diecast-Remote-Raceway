@@ -32,10 +32,8 @@ def main():
     init_display()
     device = DeviceIO()
 
-
     track = Track(config, device)
-    track.wait_for_finish()
-
+    track.main_menu()
 
     while not pr.window_should_close():
         track.loop()
