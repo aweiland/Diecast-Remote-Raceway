@@ -35,58 +35,58 @@ from pyray import BLACK, WHITE, GRAY, LIGHTGRAY, RAYWHITE
 # Given the current cursor position, the cell to move to when the
 # joystick key is pressed in each direction.
 
-#pylint: disable=bad-whitespace,bad-continuation
-UP = [  24, 25, 26, 27, 28, 29,
-         0,  1,  2,  3,  4,  5,
-         6,  7,  8,  9, 10, 11,
-        12, 13, 14, 15, 16, 17,
-        18, 19, 20, 21, 22, 23]
+# pylint: disable=bad-whitespace,bad-continuation
+UP = [24, 25, 26, 27, 28, 29,
+      0, 1, 2, 3, 4, 5,
+      6, 7, 8, 9, 10, 11,
+      12, 13, 14, 15, 16, 17,
+      18, 19, 20, 21, 22, 23]
 
-DOWN = [ 6,  7,  8,  9, 10, 11,
+DOWN = [6, 7, 8, 9, 10, 11,
         12, 13, 14, 15, 16, 17,
         18, 19, 20, 21, 22, 23,
         24, 25, 26, 27, 28, 29,
-         0,  1,  2,  3,  4,  5]
+        0, 1, 2, 3, 4, 5]
 
-LEFT = [ 5,  0,  1,  2,  3,  4,
-        11,  6,  7,  8,  9, 10,
+LEFT = [5, 0, 1, 2, 3, 4,
+        11, 6, 7, 8, 9, 10,
         17, 12, 13, 14, 15, 16,
         23, 18, 19, 20, 21, 22,
         29, 24, 25, 26, 27, 28]
 
-RIGHT = [1,  2,  3,  4,  5,  0,
-         7,  8,  9, 10, 11,  6,
-        13, 14, 15, 16, 17, 12,
-        19, 20, 21, 22, 23, 18,
-        25, 26, 27, 28, 29, 24]
+RIGHT = [1, 2, 3, 4, 5, 0,
+         7, 8, 9, 10, 11, 6,
+         13, 14, 15, 16, 17, 12,
+         19, 20, 21, 22, 23, 18,
+         25, 26, 27, 28, 29, 24]
 
 # Character maps for each input mode
-UPPER =   ["A", "B", "C", "D", "E", "F",
-           "G", "H", "I", "J", "K", "L",
-           "M", "N", "O", "P", "Q", "R",
-           "S", "T", "U", "V", "W", "X",
-           "Y", "Z", " ", " ", " ", " "]
+UPPER = ["A", "B", "C", "D", "E", "F",
+         "G", "H", "I", "J", "K", "L",
+         "M", "N", "O", "P", "Q", "R",
+         "S", "T", "U", "V", "W", "X",
+         "Y", "Z", " ", " ", " ", " "]
 
-LOWER =   ["a", "b", "c", "d", "e", "f",
-           "g", "h", "i", "j", "k", "l",
-           "m", "n", "o", "p", "q", "r",
-           "s", "t", "u", "v", "w", "x",
-           "y", "z", " ", " ", " ", " "]
+LOWER = ["a", "b", "c", "d", "e", "f",
+         "g", "h", "i", "j", "k", "l",
+         "m", "n", "o", "p", "q", "r",
+         "s", "t", "u", "v", "w", "x",
+         "y", "z", " ", " ", " ", " "]
 
 SPECIAL = ["0", "1", "2", "3", "4", "5",
            "6", "7", "8", "9", ",", ".",
            ":", ";", "'", '"', "+", "=",
            "!", "@", "#", "$", "%", "?",
            "&", "*", "(", ")", "-", "_"]
-#pylint: enable=bad-whitespace,bad-continuation
+# pylint: enable=bad-whitespace,bad-continuation
 
 # Names of character maps
 MODE_UPPER = 1
 MODE_LOWER = 2
 MODE_SPECIAL = 3
 
-class Input:
 
+class Input:
     """
     Input():
 
@@ -103,7 +103,7 @@ class Input:
 
     """
 
-# PUBLIC
+    # PUBLIC
 
     def get_string(self, mode=MODE_UPPER):
         """
@@ -139,8 +139,8 @@ class Input:
             pr.begin_drawing()
             pr.clear_background(RAYWHITE)
 
-            #blink = int(time.monotonic_ns()/400000000) % 2
-            blink = int(time.monotonic()*4) % 2
+            # blink = int(time.monotonic_ns()/400000000) % 2
+            blink = int(time.monotonic() * 4) % 2
 
             if blink == 0:
                 display_string = self.string + "_"
@@ -168,7 +168,7 @@ class Input:
         self.device.pop_key_handlers()
         return self.string
 
-# PRIVATE
+    # PRIVATE
 
     def __init__(self, font):
 
@@ -227,7 +227,7 @@ class Input:
             elif self.mode == MODE_SPECIAL:
                 self.string = self.string + SPECIAL[self.cursor_pos]
 
-    def __text_box(self, text, x, y, width, height, size, gray=False): # pylint: disable=invalid-name
+    def __text_box(self, text, x, y, width, height, size, gray=False):  # pylint: disable=invalid-name
         """
         Draw a box at position (x,y) with a width w and height h.
         Display text b with point size s within th box.
@@ -242,11 +242,10 @@ class Input:
 
         pr.draw_rectangle_lines(x, y, width, height, BLACK)
         # pr.draw_text_rec(self.font, text, [x+10, y+5, width-10, height-5],
-                                #  size, 5.0, True, BLACK)
-        pr.draw_text_ex(self.font, text, pr.Vector2(x+10, y+2), size, 5.0, BLACK)
-        
+        #  size, 5.0, True, BLACK)
+        pr.draw_text_ex(self.font, text, pr.Vector2(x + 10, y + 2), size, 5.0, BLACK)
 
-    def __character_box(self, text, x, y, width, height, size, inverted=False): # pylint: disable=invalid-name
+    def __character_box(self, text, x, y, width, height, size, inverted=False):  # pylint: disable=invalid-name
         """
         Draw a box at position (x,y) with a width w and height h.
         Display text b with point size s within th box.
@@ -259,14 +258,14 @@ class Input:
             # pr.draw_rectangle_rec([x, y, width, height], GRAY)
             pr.draw_rectangle(x, y, width, height, GRAY)
             # pr.draw_text_rec(self.font, text, [x+10, y+10, width, height],
-                                    #  size, 10.0, True, WHITE)
-            pr.draw_text_ex(self.font, text, pr.Vector2(x+10, y+2), size, 10.0, WHITE)
+            #  size, 10.0, True, WHITE)
+            pr.draw_text_ex(self.font, text, pr.Vector2(x + 10, y + 2), size, 10.0, WHITE)
         else:
             # pr.draw_rectangle_rec([x, y, width, height], WHITE)
             pr.draw_rectangle(x, y, width, height, WHITE)
             # pr.draw_text_rec(self.font, text, [x+10, y+10, width, height],
-                                    #  size, 10.0, True, BLACK)
-            pr.draw_text_ex(self.font, text, pr.Vector2(x+10, y+2), size, 10.0, BLACK)
+            #  size, 10.0, True, BLACK)
+            pr.draw_text_ex(self.font, text, pr.Vector2(x + 10, y + 2), size, 10.0, BLACK)
             pr.draw_rectangle_lines(x, y, width, height, BLACK)
 
     def __character_position(self, byte_array, grid_pos, width=40):
@@ -277,7 +276,7 @@ class Input:
         # pylint: disable=invalid-name
         # x and y are perfectly acceptable names for cartesian coordinates!
         x = 40 * (grid_pos % 6)
-        y = 40 + (40 * int(grid_pos/6))
+        y = 40 + (40 * int(grid_pos / 6))
         # pylint: enable=invalid-name
 
         height = 40
@@ -286,15 +285,16 @@ class Input:
             # pr.draw_rectangle_rec([x, y, width, height], GRAY)
             pr.draw_rectangle(x, y, width, height, GRAY)
             # pr.draw_text_rec(self.font, byte_array, [x+10, y+10, width, height],
-                                    #  28, 10.0, True, WHITE)
-            pr.draw_text_ex(self.font, byte_array, pr.Vector2(x+10, y+2), 28, 10.0, WHITE)
+            #  28, 10.0, True, WHITE)
+            pr.draw_text_ex(self.font, byte_array, pr.Vector2(x + 10, y + 2), 28, 10.0, WHITE)
         else:
             # pr.draw_rectangle_rec([x, y, width, height], WHITE)
             pr.draw_rectangle(x, y, width, height, WHITE)
             # pr.draw_text_rec(self.font, byte_array, [x+10, y+10, width, height],
-                                    #  28, 10.0, True, BLACK)
-            pr.draw_text_ex(self.font, byte_array, pr.Vector2(x+10, y+2), 28, 10.0, BLACK)
+            #  28, 10.0, True, BLACK)
+            pr.draw_text_ex(self.font, byte_array, pr.Vector2(x + 10, y + 2), 28, 10.0, BLACK)
         pr.draw_rectangle_lines(x, y, width, height, BLACK)
+
 
 def main():
     """
@@ -313,6 +313,7 @@ def main():
         print("User input '", string, "'")
         if string == "done":
             break
+
 
 if __name__ == '__main__':
     main()

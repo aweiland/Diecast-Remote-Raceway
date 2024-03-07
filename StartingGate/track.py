@@ -4,6 +4,7 @@ import operator
 import threading
 from dataclasses import dataclass
 
+from menuv2 import Menu
 from deviceio import DeviceIO, SERVO, LANE1, LANE2, LANE3, LANE4
 from functools import wraps
 
@@ -391,60 +392,56 @@ class RaceFinished(TrackState):
         self.view.draw(self.context.config, results=self.results)
 
 
-class DummyMenu(TrackState):
-    def enter(self):
-        pass
-
-    def exit(self):
-        pass
-
-    def loop(self):
-        pass
 
 
-# @singleton
 class ConfigureMenu(TrackState):
-    @dataclass
-    class MenuItem:
-        label: str
-        next_state: TrackState
+    # @dataclass
+    # class MenuItem:
+    #     label: str
+    #     next_state: MenuView
 
     def __init__(self):
         super().__init__()
         self.current_menu_item = 0
-        self.menu_items = [
-            ConfigureMenu.MenuItem("Track Name", DummyMenu()),
-            ConfigureMenu.MenuItem("# of Lanes", DummyMenu()),
-            ConfigureMenu.MenuItem("Car Icons", DummyMenu()),
-            ConfigureMenu.MenuItem("Circuit Name", DummyMenu()),
-            ConfigureMenu.MenuItem("Race Timeout", DummyMenu()),
-            ConfigureMenu.MenuItem("WiFi Setup", DummyMenu()),
-            ConfigureMenu.MenuItem("Coordinator", DummyMenu()),
-            ConfigureMenu.MenuItem("Servo Limits", DummyMenu()),
-            ConfigureMenu.MenuItem("Reset", DummyMenu())
-        ]
-        self.view = ConfigMenuView()
+        # self.menu_items = [
+        #     ConfigureMenu.MenuItem("Track Name", EnterTrackNameView()),
+        #     ConfigureMenu.MenuItem("# of Lanes", DummyMenu()),
+        #     ConfigureMenu.MenuItem("Car Icons", DummyMenu()),
+        #     ConfigureMenu.MenuItem("Circuit Name", DummyMenu()),
+        #     ConfigureMenu.MenuItem("Race Timeout", DummyMenu()),
+        #     ConfigureMenu.MenuItem("WiFi Setup", DummyMenu()),
+        #     ConfigureMenu.MenuItem("Coordinator", DummyMenu()),
+        #     ConfigureMenu.MenuItem("Servo Limits", DummyMenu()),
+        #     ConfigureMenu.MenuItem("Reset", DummyMenu())
+        # ]
+        # self.config_menu_view = ConfigureMenu()
+        # self.view = self.config_menu_view
+        self.menu = Menu()
 
-    def enter(self):
-        def __joystick_handler2(btn):
-            print("menu: btn.pin: ", btn.pin, "self.cursor_pos: ", self.current_menu_item)
-            if btn.pin == JOYL.pin:
-                self.context.main_menu()
-            elif btn.pin == JOYD.pin:
-                self.current_menu_item = (self.current_menu_item + 1) % len(self.menu_items)
-            elif btn.pin == JOYU.pin:
-                self.current_menu_item = (self.current_menu_item - 1) % len(self.menu_items)
-            elif btn.pin == JOYP.pin:
-                pass
-
-        self.context.device.push_key_handlers(deviceio.default_key_1_handler, deviceio.default_key_2_handler,
-                                              deviceio.default_key_2_handler, __joystick_handler2)
-
-    def exit(self):
-        self.context.device.pop_key_handlers()
+    # def enter(self):
+    #     def __joystick_handler2(btn):
+    #         print("menu: btn.pin: ", btn.pin, "self.cursor_pos: ", self.current_menu_item)
+    #         if btn.pin == JOYL.pin:
+    #             self.context.main_menu()
+    #         elif btn.pin == JOYD.pin:
+    #             self.current_menu_item = (self.current_menu_item + 1) % len(self.menu_items)
+    #         elif btn.pin == JOYU.pin:
+    #             self.current_menu_item = (self.current_menu_item - 1) % len(self.menu_items)
+    #         elif btn.pin == JOYP.pin:
+    #             self.view = self.menu_items[self.current_menu_item].next_state
+    #
+    #     self.context.device.push_key_handlers(deviceio.default_key_1_handler, deviceio.default_key_2_handler,
+    #                                           deviceio.default_key_2_handler, __joystick_handler2)
+    #
+    # def exit(self):
+    #     self.context.device.pop_key_handlers()
 
     def loop(self):
-        self.view.draw(self.context.config, menu_items=self.menu_items, current_menu_item=self.current_menu_item)
+        # self.view.draw(self.context.config, menu_items=self.menu_items, current_menu_item=self.current_menu_item)
+        # this blocks until finished
+        self.menu.process_menus(self.context.config)
+        self.context.main_menu()
+
 
 
 def run_sample_race():

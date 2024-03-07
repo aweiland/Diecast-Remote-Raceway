@@ -21,7 +21,6 @@ class View(ABC):
         pr.begin_drawing()
         pr.clear_background(RAYWHITE)
         self._draw(config, **kwargs)
-
         pr.end_drawing()
 
     @abstractmethod
