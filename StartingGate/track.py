@@ -155,11 +155,16 @@ class WaitForFinish(TrackState):
 
     def enter(self):
         print("Waiting for finish line...")
+        self.context.device.push_key_handlers(self.context.main_menu, deviceio.default_key_2_handler,
+                                              deviceio.default_key_3_handler, deviceio.default_joystick_handler)
 
         # clear old socket if exists
         if self.context.socket is not None:
             self.context.poller.unregister(self.context.socket)
             self.context.socket.close()
+
+    def exit(self):
+        self.context.device.pop_key_handlers()
 
     def loop(self):
         self.view.draw(self.context.config)

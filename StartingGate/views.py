@@ -99,22 +99,59 @@ class TrackView(View, ABC):
         pr.draw_texture(self.background_texture, 0, 0, WHITE)
         self._draw_lanes(config)
 
-    def _draw_lanes(self, config):
-        pr.draw_line_ex([35, 40], [35, 230], 34.0, ORANGE)
-        pr.draw_line_ex([80, 40], [80, 230], 34.0, ORANGE)
+    def _draw_lanes(self, config: Config):
+        checkerboard_texture = self.checkerboard_small_texture if config.num_lanes > 2 else self.checkerboard_large_texture
+        lane_size = 34.0 if config.num_lanes > 2 or config.multi_track else 64.0
 
-        pr.draw_texture(self.checkerboard_small_texture, 18, 196, WHITE)
-        pr.draw_texture(self.checkerboard_small_texture, 63, 196, WHITE)
+        lanes_large = [
+            ([35, 40], [35, 230]),
+            ([80, 40], [80, 230]),
+            ([155, 40], [155, 230]),
+            ([200, 40], [200, 230])
+        ]
 
+        lanes_small = [
+            ([64, 10], [64, 230]),
+            ([164, 10], [164, 230])
+        ]
+
+        lanes = lanes_large if config.num_lanes > 2 or config.multi_track else lanes_small
+
+        checkerboard_large = [
+            (18, 196),
+            (63, 196),
+            (138, 196),
+            (183, 196)
+        ]
+
+        checkerboard_small = [
+            (32, 166),
+            (132, 166)
+        ]
+
+        checkerboard = checkerboard_large if config.num_lanes > 2 or config.multi_track else checkerboard_small
+
+        for x in range(config.num_lanes):
+            pr.draw_line_ex(lanes[x][0], lanes[x][1], lane_size, ORANGE)
+            pr.draw_texture(checkerboard_texture, checkerboard[x][0], checkerboard[x][1], WHITE)
+
+        # pr.draw_line_ex([35, 40], [35, 230], 34.0, ORANGE)
+        # pr.draw_line_ex([80, 40], [80, 230], 34.0, ORANGE)
+        #
+        # pr.draw_texture(checkerboard_texture, 18, 196, WHITE)
+        # pr.draw_texture(checkerboard_texture, 63, 196, WHITE)
+        #
         # Divider line
         if config.multi_track:
             pr.draw_line_ex([120, 5], [120, 235], 4.0, BLACK)
+        #
+        # pr.draw_line_ex([155, 40], [155, 230], 34.0, ORANGE)
+        # pr.draw_line_ex([200, 40], [200, 230], 34.0, ORANGE)
+        #
+        # pr.draw_texture(self.checkerboard_small_texture, 138, 196, WHITE)
+        # pr.draw_texture(self.checkerboard_small_texture, 183, 196, WHITE)
 
-        pr.draw_line_ex([155, 40], [155, 230], 34.0, ORANGE)
-        pr.draw_line_ex([200, 40], [200, 230], 34.0, ORANGE)
-
-        pr.draw_texture(self.checkerboard_small_texture, 138, 196, WHITE)
-        pr.draw_texture(self.checkerboard_small_texture, 183, 196, WHITE)
+        # old 2 lanes
         # pr.draw_line_ex([64, 10], [64, 230], 64.0, ORANGE)
         # pr.draw_line_ex([164, 10], [164, 230], 64.0, ORANGE)
 
@@ -193,7 +230,7 @@ class WaitForFinishView(TrackView):
 
     def _draw(self, config, **kwargs):
         self._draw_background(config)
-        self._text_message("Connecting to " + config.finish_line_name)
+        self._text_message("Connecting to \n\n" + config.finish_line_name)
 
 
 class WaitForCarsView(TrackView):
