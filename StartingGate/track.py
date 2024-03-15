@@ -130,7 +130,8 @@ class MainMenu(TrackState):
 
     def __start_race(self):
         print('race')
-        self.context.wait_for_finish()
+        # self.context.wait_for_finish()
+        self.context.wait_for_cars()
 
     def __configure(self):
         print('configure')
@@ -242,6 +243,8 @@ class Countdown(TrackState):
 
     def loop(self):
         timer = 3 - math.floor(time.monotonic() - self.start_time)
+        if timer <= 0:
+            self.context.run_race()
         self.view.draw(self.context.config, timer=timer)
 
 

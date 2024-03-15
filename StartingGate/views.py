@@ -82,18 +82,22 @@ class TrackView(View, ABC):
         self.question_small_texture = load_texture("cars/question-24.png")
         self.question_large_texture = load_texture("cars/question-48.png")
 
-        self.car_textures = [None] * 4
+        # self.car_textures = [None] * 4
+        self.large_car_textures = [None] * 4
+        self.small_car_textures = [None] * 4
 
     def load_car_images(self, config: Config):
         # cleanup existing textures (if they exist)
-        for texture in self.car_textures:
+        for texture in self.small_car_textures + self.large_car_textures:
             if texture:
                 pr.unload_texture(texture)
 
         for car in range(4):
             car_icon_size = 24
             icon = config.car_icons[car]
-            self.car_textures[car] = load_texture("cars/{}-{}.png".format(icon, car_icon_size))
+            self.small_car_textures[car] = load_texture("cars/{}-{}.png".format(icon, car_icon_size))
+            car_icon_size = 48
+            self.large_car_textures[car] = load_texture("cars/{}-{}.png".format(icon, car_icon_size))
 
     def _draw_background(self, config):
         pr.draw_texture(self.background_texture, 0, 0, WHITE)
@@ -163,26 +167,35 @@ class TrackView(View, ABC):
         if car_status is None:
             car_status = [True, True, True, True]
 
+        small_cars = [22, 68, 142, 188]
+        large_cars = [40, 140]
+        cars = small_cars if config.num_lanes > 2 or config.multi_track else large_cars
+
         if config.num_lanes < 3:
             question_texture = self.question_large_texture
         else:
             question_texture = self.question_small_texture
 
-        car_textures = [self.car_textures[idx] if status else question_texture for idx, status in enumerate(car_status)]
+        car_textures = self.small_car_textures if config.num_lanes > 2 or config.multi_track else self.large_car_textures
 
-        if config.multi_track:
-            # FIXME
-            pr.draw_texture(car_textures[0], 22, car_positions[0], WHITE)
-            pr.draw_texture(car_textures[1], 68, car_positions[1], WHITE)
-            pr.draw_texture(car_textures[2], 142, car_positions[2], WHITE)
-            pr.draw_texture(car_textures[3], 188, car_positions[3], WHITE)
-        else:
-            # pr.draw_texture(texture1,  40, self.local_y[CAR1],  WHITE)
-            # pr.draw_texture(texture2, 140, self.local_y[CAR2],  WHITE)
-            pr.draw_texture(car_textures[0], 22, car_positions[0], WHITE)
-            pr.draw_texture(car_textures[1], 68, car_positions[1], WHITE)
-            pr.draw_texture(car_textures[2], 142, car_positions[2], WHITE)
-            pr.draw_texture(car_textures[3], 188, car_positions[3], WHITE)
+        car_textures = [car_textures[idx] if status else question_texture for idx, status in enumerate(car_status)]
+
+        for x in range(config.num_lanes):
+            pr.draw_texture(car_textures[x], cars[x], car_positions[x], WHITE)
+
+        # if config.multi_track:
+        #     # FIXME
+        #     pr.draw_texture(car_textures[0], 22, car_positions[0], WHITE)
+        #     pr.draw_texture(car_textures[1], 68, car_positions[1], WHITE)
+        #     pr.draw_texture(car_textures[2], 142, car_positions[2], WHITE)
+        #     pr.draw_texture(car_textures[3], 188, car_positions[3], WHITE)
+        # else:
+        #     # pr.draw_texture(texture1,  40, self.local_y[CAR1],  WHITE)
+        #     # pr.draw_texture(texture2, 140, self.local_y[CAR2],  WHITE)
+        #     pr.draw_texture(car_textures[0], 22, car_positions[0], WHITE)
+        #     pr.draw_texture(car_textures[1], 68, car_positions[1], WHITE)
+        #     pr.draw_texture(car_textures[2], 142, car_positions[2], WHITE)
+        #     pr.draw_texture(car_textures[3], 188, car_positions[3], WHITE)
 
 
 class DummyView(View):
